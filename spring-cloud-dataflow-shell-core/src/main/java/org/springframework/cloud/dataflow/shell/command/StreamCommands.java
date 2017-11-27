@@ -19,12 +19,14 @@ package org.springframework.cloud.dataflow.shell.command;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Properties;
 
 import org.apache.commons.io.FilenameUtils;
+import org.springframework.cloud.skipper.domain.Release;
 import org.yaml.snakeyaml.Yaml;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -79,6 +81,10 @@ public class StreamCommands implements CommandMarker {
 	private static final String STREAM_SKIPPER_UPDATE = "stream skipper update";
 
 	private static final String STREAM_SKIPPER_ROLLBACK = "stream skipper rollback";
+
+	private static final String STREAM_SKIPPER_MANIFEST_GET = "stream skipper manifest";
+
+	private static final String STREAM_SKIPPER_HISTORY = "stream skipper history";
 
 	private static final String UNDEPLOY_STREAM = "stream undeploy";
 
@@ -219,6 +225,26 @@ public class StreamCommands implements CommandMarker {
 		Map<String, String> propertiesToUse = getDeploymentProperties(deploymentProperties, propertiesFile, which);
 		streamOperations().deploy(name, propertiesToUse);
 		return String.format("Deployment request has been sent for stream '%s'", name);
+	}
+
+	@CliCommand(value = STREAM_SKIPPER_MANIFEST_GET, help = "Get manifest for the stream deployed using Skipper")
+	public String getManifest(
+			@CliOption(key = { "",
+					"name" }, help = "the name of the stream", mandatory = true, optionContext = "existing-stream "
+					+ "disable-string-converter") String name,
+			@CliOption(key = { "releaseVersion" }, help = "the Skipper release version to rollback to",
+					unspecifiedDefaultValue = "0") int releaseVersion) {
+		return streamOperations().getManifest(name, releaseVersion);
+	}
+
+	@CliCommand(value = STREAM_SKIPPER_HISTORY, help = "Get history for the stream deployed using Skipper")
+	public Collection<Release> history(
+			@CliOption(key = { "",
+					"name" }, help = "the name of the stream", mandatory = true, optionContext = "existing-stream "
+					+ "disable-string-converter") String name,
+			@CliOption(key = { "max" }, help = "the maximum number of revisions to retrieve",
+					unspecifiedDefaultValue = "0") int max) {
+		return streamOperations().history(name, max);
 	}
 
 	@CliCommand(value = STREAM_SKIPPER_UPDATE, help = "Update a previously created stream using Skipper")

@@ -16,6 +16,7 @@
 
 package org.springframework.cloud.dataflow.server.controller;
 
+import java.util.Collection;
 import java.util.Map;
 
 import org.springframework.cloud.dataflow.core.StreamDefinition;
@@ -25,9 +26,12 @@ import org.springframework.cloud.dataflow.server.repository.NoSuchStreamDefiniti
 import org.springframework.cloud.dataflow.server.repository.StreamDefinitionRepository;
 import org.springframework.cloud.dataflow.server.service.StreamService;
 import org.springframework.cloud.deployer.spi.app.AppDeployer;
+import org.springframework.cloud.skipper.client.SkipperClient;
+import org.springframework.cloud.skipper.domain.Release;
 import org.springframework.hateoas.ExposesResourceFor;
 import org.springframework.http.HttpStatus;
 import org.springframework.util.Assert;
+import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -52,6 +56,8 @@ public class StreamDeploymentController {
 
 	private final StreamService streamService;
 
+	private final SkipperClient skipperClient;
+
 	/**
 	 * The repository this controller will use for stream CRUD operations.
 	 */
@@ -67,12 +73,16 @@ public class StreamDeploymentController {
 	 *
 	 * @param repository the repository this controller will use for stream CRUD operations
 	 * @param streamService the underlying StreamService to deploy the stream
+	 * @param skipperClient the Skipper client to use for Skipper related services
 	 */
-	public StreamDeploymentController(StreamDefinitionRepository repository, StreamService streamService) {
+	public StreamDeploymentController(StreamDefinitionRepository repository, StreamService streamService,
+			SkipperClient skipperClient) {
 		Assert.notNull(repository, "StreamDefinitionRepository must not be null");
 		Assert.notNull(streamService, "StreamService must not be null");
+		Assert.notNull(skipperClient, "SkipperClient must not be null");
 		this.repository = repository;
 		this.streamService = streamService;
+		this.skipperClient = skipperClient;
 	}
 
 	/**
@@ -124,6 +134,35 @@ public class StreamDeploymentController {
 	@ResponseStatus(HttpStatus.CREATED)
 	public void rollback(@PathVariable("name") String name, @PathVariable("version") int version) {
 		this.streamService.rollbackStream(name, version);
+	}
+
+	@RequestMapping(value = "/manifest/{name}/{version}", method = RequestMethod.GET)
+	@ResponseStatus(HttpStatus.OK)
+	public String manifest(@PathVariable("name") String name, @PathVariable("version") int version) {
+		return this.skipperClient.manifest(name, version);
+	}
+
+	@RequestMapping(path = "/history/{name}/{max}", method = RequestMethod.GET)
+	@ResponseStatus(HttpStatus.OK)
+	public Collection<Release> history(@PathVariable("name") String releaseName,
+			@PathVariable("max") String maxRevisions) {
+		if (StringUtils.hasText(maxRevisions)) {
+			assertMaxIsIntegerAndGreaterThanZero(maxRevisions);
+			return this.skipperClient.history(releaseName, maxRevisions);
+		}
+		else {
+			return this.skipperClient.history(releaseName).getContent();
+		}
+	}
+
+	private void assertMaxIsIntegerAndGreaterThanZero(String max) {
+		try {
+			int maxInt = Integer.parseInt(max);
+			Assert.isTrue(maxInt > 0, "The maximum number of revisions should be greater than zero.");
+		}
+		catch (NumberFormatException e) {
+			throw new NumberFormatException("The maximum number of revisions is not an integer. Input string = " + max);
+		}
 	}
 
 }
