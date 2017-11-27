@@ -18,11 +18,11 @@ package org.springframework.cloud.dataflow.rest.client;
 
 import java.util.Collection;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 import org.springframework.cloud.dataflow.rest.UpdateStreamRequest;
 import org.springframework.cloud.dataflow.rest.resource.StreamDefinitionResource;
+import org.springframework.cloud.skipper.domain.Deployer;
 import org.springframework.cloud.skipper.domain.PackageIdentifier;
 import org.springframework.cloud.skipper.domain.Release;
 import org.springframework.core.ParameterizedTypeReference;
@@ -159,6 +159,16 @@ public class StreamTemplate implements StreamOperations {
 		if (maxRevisions >= 1) {
 			url = url + "/" + maxRevisions;
 		}
+		return this.restTemplate.exchange(url, HttpMethod.GET, null, typeReference, parameters).getBody();
+	}
+
+	@Override
+	public Collection<Deployer> listPlatforms() {
+		ParameterizedTypeReference<Collection<Deployer>> typeReference = new ParameterizedTypeReference<Collection<Deployer>>
+				() {
+		};
+		Map<String, Object> parameters = new HashMap<>();
+		String url = url = deploymentsLink.getHref() + "/platform/list";
 		return this.restTemplate.exchange(url, HttpMethod.GET, null, typeReference, parameters).getBody();
 	}
 

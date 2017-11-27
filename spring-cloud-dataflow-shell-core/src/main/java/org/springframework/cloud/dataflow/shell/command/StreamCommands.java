@@ -26,6 +26,7 @@ import java.util.Map;
 import java.util.Properties;
 
 import org.apache.commons.io.FilenameUtils;
+import org.springframework.cloud.skipper.domain.Deployer;
 import org.springframework.cloud.skipper.domain.Release;
 import org.yaml.snakeyaml.Yaml;
 
@@ -85,6 +86,8 @@ public class StreamCommands implements CommandMarker {
 	private static final String STREAM_SKIPPER_MANIFEST_GET = "stream skipper manifest";
 
 	private static final String STREAM_SKIPPER_HISTORY = "stream skipper history";
+
+	private static final String STREAM_SKIPPER_PLATFORM_LIST = "stream skipper platform-list";
 
 	private static final String UNDEPLOY_STREAM = "stream undeploy";
 
@@ -245,6 +248,17 @@ public class StreamCommands implements CommandMarker {
 			@CliOption(key = { "max" }, help = "the maximum number of revisions to retrieve",
 					unspecifiedDefaultValue = "0") int max) {
 		return streamOperations().history(name, max);
+	}
+
+	@CliCommand(value = STREAM_SKIPPER_PLATFORM_LIST, help = "List Skipper platforms")
+	public Table listPlatforms() {
+		Collection<Deployer> platforms = streamOperations().listPlatforms();
+		LinkedHashMap<String, Object> headers = new LinkedHashMap<>();
+		headers.put("name", "Name");
+		headers.put("type", "Type");
+		headers.put("description", "Description");
+		BeanListTableModel<Deployer> model = new BeanListTableModel<>(platforms, headers);
+		return DataFlowTables.applyStyle(new TableBuilder(model)).build();
 	}
 
 	@CliCommand(value = STREAM_SKIPPER_UPDATE, help = "Update a previously created stream using Skipper")
