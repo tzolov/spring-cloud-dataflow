@@ -16,10 +16,10 @@
 
 package org.springframework.cloud.dataflow.server.config;
 
-import javax.sql.DataSource;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
+import javax.sql.DataSource;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.commons.logging.Log;
@@ -56,6 +56,7 @@ import org.springframework.cloud.dataflow.registry.RdbmsUriRegistry;
 import org.springframework.cloud.dataflow.registry.repository.AppRegistrationRepository;
 import org.springframework.cloud.dataflow.registry.service.AppRegistryService;
 import org.springframework.cloud.dataflow.registry.service.DefaultAppRegistryService;
+import org.springframework.cloud.dataflow.registry.service.ResourceService;
 import org.springframework.cloud.dataflow.server.config.apps.CommonApplicationProperties;
 import org.springframework.cloud.dataflow.server.config.features.FeaturesProperties;
 import org.springframework.cloud.dataflow.server.controller.AboutController;
@@ -128,16 +129,21 @@ import org.springframework.web.client.RestTemplate;
 @SuppressWarnings("all")
 @Configuration
 @Import(CompletionConfiguration.class)
-@ConditionalOnBean({EnableDataFlowServerConfiguration.Marker.class, AppDeployer.class, TaskLauncher.class})
-@EnableConfigurationProperties({FeaturesProperties.class, VersionInfoProperties.class, MetricsProperties.class})
+@ConditionalOnBean({ EnableDataFlowServerConfiguration.Marker.class, AppDeployer.class, TaskLauncher.class })
+@EnableConfigurationProperties({ FeaturesProperties.class, VersionInfoProperties.class, MetricsProperties.class })
 @ConditionalOnProperty(prefix = "dataflow.server", name = "enabled", havingValue = "true", matchIfMissing = true)
 @EnableCircuitBreaker
-@EntityScan({"org.springframework.cloud.dataflow.registry.domain"})
+@EntityScan({ "org.springframework.cloud.dataflow.registry.domain" })
 @EnableJpaRepositories(basePackages = "org.springframework.cloud.dataflow.registry.repository")
 @EnableTransactionManagement
 public class DataFlowControllerAutoConfiguration {
 
 	private static Log logger = LogFactory.getLog(DataFlowControllerAutoConfiguration.class);
+
+	@Bean
+	public ResourceService resourceService(MavenProperties mavenProperties, DelegatingResourceLoader resourceLoader) {
+		return new ResourceService(mavenProperties, resourceLoader);
+	}
 
 	@Bean
 	public UriRegistry uriRegistry(DataSource dataSource) {
@@ -147,25 +153,25 @@ public class DataFlowControllerAutoConfiguration {
 	@Bean
 	@ConditionalOnExpression("#{'${" + FeaturesProperties.FEATURES_PREFIX + "." + FeaturesProperties.SKIPPER_ENABLED
 			+ ":false}'.equalsIgnoreCase('false')}")
-	public AppRegistry appRegistry(UriRegistry uriRegistry, DelegatingResourceLoader resourceLoader,
-			MavenProperties mavenProperties) {
-		return new AppRegistry(uriRegistry, resourceLoader, mavenProperties);
+	public AppRegistry appRegistry(UriRegistry uriRegistry, ResourceService resourceService) {
+		return new AppRegistry(uriRegistry, resourceService);
 	}
 
 	@Bean
 	@ConditionalOnExpression("#{'${" + FeaturesProperties.FEATURES_PREFIX + "." + FeaturesProperties.SKIPPER_ENABLED
 			+ ":false}'.equalsIgnoreCase('true')}")
 	public AppRegistryService appRegistryService(AppRegistrationRepository appRegistrationRepository,
-			DelegatingResourceLoader resourceLoader) {
-		return new DefaultAppRegistryService(appRegistrationRepository, resourceLoader, mavenProperties());
+			ResourceService resourceService) {
+		return new DefaultAppRegistryService(appRegistrationRepository, resourceService);
 	}
 
 	@Bean
 	@ConditionalOnExpression("#{'${" + FeaturesProperties.FEATURES_PREFIX + "." + FeaturesProperties.SKIPPER_ENABLED
 			+ ":false}'.equalsIgnoreCase('true')}")
 	public VersionedAppRegistryController appRegistryController2(AppRegistryService appRegistry,
-			ApplicationConfigurationMetadataResolver metadataResolver) {
-		return new VersionedAppRegistryController(appRegistry, metadataResolver, appRegistryFJPFB().getObject(), mavenProperties());
+			ApplicationConfigurationMetadataResolver metadataResolver, ResourceService resourceService) {
+		return new VersionedAppRegistryController(appRegistry, metadataResolver, appRegistryFJPFB().getObject(),
+				resourceService);
 	}
 
 	@Bean
@@ -191,14 +197,14 @@ public class DataFlowControllerAutoConfiguration {
 	}
 
 	@Bean
-	@ConditionalOnBean({StreamDefinitionRepository.class, StreamDeploymentRepository.class})
+	@ConditionalOnBean({ StreamDefinitionRepository.class, StreamDeploymentRepository.class })
 	public StreamDeploymentController streamDeploymentController(StreamDefinitionRepository repository,
 			StreamService streamService, SkipperClient skipperClient) {
 		return new StreamDeploymentController(repository, streamService, skipperClient);
 	}
 
 	@Configuration
-	@ConditionalOnBean({StreamDefinitionRepository.class, StreamDeploymentRepository.class})
+	@ConditionalOnBean({ StreamDefinitionRepository.class, StreamDeploymentRepository.class })
 	@EnableConfigurationProperties(SkipperClientProperties.class)
 	public static class SkipperStreamDeployerConfiguration {
 
@@ -216,14 +222,14 @@ public class DataFlowControllerAutoConfiguration {
 		@Bean
 		public SkipperStreamDeployer skipperStreamDeployer(SkipperClient skipperClient,
 				StreamDeploymentRepository streamDeploymentRepository,
-				SkipperClientProperties skipperClientProperties) {
+				SkipperClientProperties skipperClientProperties, ResourceService resourceService) {
 			logger.info("Skipper URI [" + skipperClientProperties.getUri() + "]");
-			return new SkipperStreamDeployer(skipperClient, streamDeploymentRepository);
+			return new SkipperStreamDeployer(skipperClient, streamDeploymentRepository, resourceService);
 		}
 	}
 
 	@Bean
-	@ConditionalOnBean({StreamDefinitionRepository.class, StreamDeploymentRepository.class})
+	@ConditionalOnBean({ StreamDefinitionRepository.class, StreamDeploymentRepository.class })
 	public StreamService streamDeploymentService(StreamDefinitionRepository streamDefinitionRepository,
 			StreamDeploymentRepository streamDeploymentRepository,
 			AppDeployerStreamDeployer appDeployerStreamDeployer,
@@ -248,7 +254,7 @@ public class DataFlowControllerAutoConfiguration {
 	}
 
 	@Bean
-	@ConditionalOnBean({StreamDefinitionRepository.class, StreamDeploymentRepository.class})
+	@ConditionalOnBean({ StreamDefinitionRepository.class, StreamDeploymentRepository.class })
 	public AppDeployerStreamDeployer appDeployerStreamDeployer(AppDeployer appDeployer,
 			DeploymentIdRepository deploymentIdRepository,
 			StreamDefinitionRepository streamDefinitionRepository,
@@ -258,7 +264,7 @@ public class DataFlowControllerAutoConfiguration {
 	}
 
 	@Bean
-	@ConditionalOnBean({StreamDefinitionRepository.class, StreamDeploymentRepository.class})
+	@ConditionalOnBean({ StreamDefinitionRepository.class, StreamDeploymentRepository.class })
 	public RuntimeAppsController runtimeAppsController(StreamDefinitionRepository repository,
 			StreamDeploymentRepository streamDeploymentRepository, DeploymentIdRepository deploymentIdRepository,
 			AppDeployer appDeployer, MetricStore metricStore, SkipperClient skipperClient) {
@@ -273,7 +279,7 @@ public class DataFlowControllerAutoConfiguration {
 	}
 
 	@Bean
-	@ConditionalOnBean({StreamDefinitionRepository.class, StreamDeploymentRepository.class})
+	@ConditionalOnBean({ StreamDefinitionRepository.class, StreamDeploymentRepository.class })
 	@ConditionalOnMissingBean(name = "runtimeAppsStatusFJPFB")
 	public ForkJoinPoolFactoryBean runtimeAppsStatusFJPFB() {
 		ForkJoinPoolFactoryBean forkJoinPoolFactoryBean = new ForkJoinPoolFactoryBean();

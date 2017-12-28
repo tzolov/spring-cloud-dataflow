@@ -42,6 +42,7 @@ import org.springframework.cloud.dataflow.registry.AppRegistryCommon;
 import org.springframework.cloud.dataflow.registry.repository.AppRegistrationRepository;
 import org.springframework.cloud.dataflow.registry.service.AppRegistryService;
 import org.springframework.cloud.dataflow.registry.service.DefaultAppRegistryService;
+import org.springframework.cloud.dataflow.registry.service.ResourceService;
 import org.springframework.cloud.dataflow.server.config.MetricsProperties;
 import org.springframework.cloud.dataflow.server.config.VersionInfoProperties;
 import org.springframework.cloud.dataflow.server.config.apps.CommonApplicationProperties;
@@ -119,12 +120,12 @@ import static org.springframework.hateoas.config.EnableHypermediaSupport.Hyperme
 @EnableSpringDataWebSupport
 @EnableHypermediaSupport(type = HAL)
 @Import(CompletionConfiguration.class)
-@ImportAutoConfiguration({HibernateJpaAutoConfiguration.class, EmbeddedDataSourceConfiguration.class})
+@ImportAutoConfiguration({ HibernateJpaAutoConfiguration.class, EmbeddedDataSourceConfiguration.class })
 @EnableWebMvc
 @EnableConfigurationProperties({ CommonApplicationProperties.class,
 		MetricsProperties.class,
-		VersionInfoProperties.class})
-@EntityScan({"org.springframework.cloud.dataflow.registry.domain"})
+		VersionInfoProperties.class })
+@EntityScan({ "org.springframework.cloud.dataflow.registry.domain" })
 @EnableJpaRepositories(basePackages = "org.springframework.cloud.dataflow.registry.repository")
 public class TestDependencies extends WebMvcConfigurationSupport {
 
@@ -155,6 +156,11 @@ public class TestDependencies extends WebMvcConfigurationSupport {
 	}
 
 	@Bean
+	public ResourceService resourceService(MavenProperties mavenProperties, DelegatingResourceLoader resourceLoader) {
+		return new ResourceService(mavenProperties, resourceLoader);
+	}
+
+	@Bean
 	public StreamDeploymentController streamDeploymentController(StreamDefinitionRepository repository,
 			StreamService streamService, SkipperClient skipperClient) {
 		return new StreamDeploymentController(repository, streamService, skipperClient);
@@ -182,8 +188,8 @@ public class TestDependencies extends WebMvcConfigurationSupport {
 
 	@Bean
 	AppDeploymentRequestCreator streamDeploymentPropertiesUtils(AppRegistryCommon appRegistry,
-																CommonApplicationProperties commonApplicationProperties,
-																ApplicationConfigurationMetadataResolver applicationConfigurationMetadataResolver) {
+			CommonApplicationProperties commonApplicationProperties,
+			ApplicationConfigurationMetadataResolver applicationConfigurationMetadataResolver) {
 		return new AppDeploymentRequestCreator(appRegistry,
 				commonApplicationProperties,
 				applicationConfigurationMetadataResolver);
@@ -199,8 +205,8 @@ public class TestDependencies extends WebMvcConfigurationSupport {
 
 	@Bean
 	public SkipperStreamDeployer skipperStreamDeployer(SkipperClient skipperClient,
-			StreamDeploymentRepository streamDeploymentRepository) {
-		return new SkipperStreamDeployer(skipperClient, streamDeploymentRepository);
+			StreamDeploymentRepository streamDeploymentRepository, ResourceService resourceService) {
+		return new SkipperStreamDeployer(skipperClient, streamDeploymentRepository, resourceService);
 	}
 
 	@Bean
@@ -241,24 +247,24 @@ public class TestDependencies extends WebMvcConfigurationSupport {
 	@Bean
 	@ConditionalOnExpression("#{'${" + FeaturesProperties.FEATURES_PREFIX + "." + FeaturesProperties.SKIPPER_ENABLED
 			+ ":false}'.equalsIgnoreCase('false')}")
-	public AppRegistry appRegistry(UriRegistry uriRegistry, DelegatingResourceLoader resourceLoader) {
-		return new AppRegistry(uriRegistry, resourceLoader);
+	public AppRegistry appRegistry(UriRegistry uriRegistry, ResourceService resourceService) {
+		return new AppRegistry(uriRegistry, resourceService);
 	}
 
 	@Bean
 	@ConditionalOnExpression("#{'${" + FeaturesProperties.FEATURES_PREFIX + "." + FeaturesProperties.SKIPPER_ENABLED
 			+ ":false}'.equalsIgnoreCase('true')}")
 	public AppRegistryService appRegistryService(AppRegistrationRepository appRegistrationRepository,
-			MavenProperties mavenProperties) {
-		return new DefaultAppRegistryService(appRegistrationRepository, resourceLoader(mavenProperties), mavenProperties);
+			ResourceService resourceService) {
+		return new DefaultAppRegistryService(appRegistrationRepository, resourceService);
 	}
 
 	@Bean
 	@ConditionalOnExpression("#{'${" + FeaturesProperties.FEATURES_PREFIX + "." + FeaturesProperties.SKIPPER_ENABLED
 			+ ":false}'.equalsIgnoreCase('true')}")
 	public VersionedAppRegistryController versionedAppRegistryController(AppRegistryService appRegistry,
-			ApplicationConfigurationMetadataResolver metadataResolver, MavenProperties mavenProperties) {
-		return new VersionedAppRegistryController(appRegistry, metadataResolver, new ForkJoinPool(2), mavenProperties);
+			ApplicationConfigurationMetadataResolver metadataResolver, ResourceService resourceService) {
+		return new VersionedAppRegistryController(appRegistry, metadataResolver, new ForkJoinPool(2), resourceService);
 	}
 
 	@Bean
@@ -366,7 +372,7 @@ public class TestDependencies extends WebMvcConfigurationSupport {
 	@Bean
 	public TaskService taskService(ApplicationConfigurationMetadataResolver metadataResolver,
 			TaskRepository taskExecutionRepository, DeploymentIdRepository deploymentIdRepository,
-								AppRegistryCommon appRegistry, DelegatingResourceLoader delegatingResourceLoader) {
+			AppRegistryCommon appRegistry, DelegatingResourceLoader delegatingResourceLoader) {
 		return new DefaultTaskService(new DataSourceProperties(), taskDefinitionRepository(), taskExplorer(),
 				taskExecutionRepository, appRegistry, delegatingResourceLoader, taskLauncher(), metadataResolver,
 				new TaskConfigurationProperties(), deploymentIdRepository, null);

@@ -36,6 +36,7 @@ import org.springframework.cloud.dataflow.core.StreamAppDefinition;
 import org.springframework.cloud.dataflow.core.StreamDefinition;
 import org.springframework.cloud.dataflow.core.StreamPropertyKeys;
 import org.springframework.cloud.dataflow.registry.AppRegistry;
+import org.springframework.cloud.dataflow.registry.service.ResourceService;
 import org.springframework.cloud.dataflow.server.config.apps.CommonApplicationProperties;
 import org.springframework.cloud.dataflow.server.configuration.TestDependencies;
 import org.springframework.cloud.dataflow.server.repository.DeploymentIdRepository;
@@ -101,7 +102,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 public class StreamControllerTests {
 
 	private final AppRegistry appRegistry = new AppRegistry(new InMemoryUriRegistry(),
-			new MavenResourceLoader(new MavenProperties()));
+			new ResourceService(new MavenProperties(), new MavenResourceLoader(new MavenProperties())));
 
 	@Autowired
 	private StreamDefinitionRepository repository;
@@ -365,7 +366,7 @@ public class StreamControllerTests {
 				.param("definition", "foo --.spring.cloud.stream.metrics.properties=spring* | bar")
 				.accept(MediaType.APPLICATION_JSON)).andDo(print()).andExpect(status().isBadRequest())
 				.andExpect(jsonPath("$[0].logref", is("InvalidStreamDefinitionException"))).andExpect(
-						jsonPath("$[0].message", startsWith("111E:(pos 6): Unexpected token.  Expected '.' but was")));
+				jsonPath("$[0].message", startsWith("111E:(pos 6): Unexpected token.  Expected '.' but was")));
 	}
 
 	@Test

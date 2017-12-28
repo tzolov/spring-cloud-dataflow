@@ -36,11 +36,10 @@ import org.springframework.cloud.dataflow.core.ApplicationType;
 import org.springframework.cloud.dataflow.registry.domain.AppRegistration;
 import org.springframework.cloud.dataflow.registry.service.AppRegistryService;
 import org.springframework.cloud.dataflow.registry.service.DefaultAppRegistryService;
+import org.springframework.cloud.dataflow.registry.service.ResourceService;
 import org.springframework.cloud.dataflow.registry.support.NoSuchAppRegistrationException;
-import org.springframework.cloud.dataflow.registry.support.ResourceUtils;
 import org.springframework.cloud.dataflow.rest.resource.AppRegistrationResource;
 import org.springframework.cloud.dataflow.rest.resource.DetailedAppRegistrationResource;
-import org.springframework.cloud.deployer.resource.maven.MavenProperties;
 import org.springframework.core.io.ByteArrayResource;
 import org.springframework.core.io.DefaultResourceLoader;
 import org.springframework.core.io.ResourceLoader;
@@ -87,17 +86,17 @@ public class VersionedAppRegistryController {
 
 	private ForkJoinPool forkJoinPool;
 
-	private final MavenProperties mavenProperties;
+	private final ResourceService resourceService;
 
 	private ResourceLoader resourceLoader = new DefaultResourceLoader();
 
 	public VersionedAppRegistryController(AppRegistryService appRegistryService,
 			ApplicationConfigurationMetadataResolver metadataResolver,
-			ForkJoinPool forkJoinPool, MavenProperties mavenProperties) {
+			ForkJoinPool forkJoinPool, ResourceService resourceService) {
 		this.appRegistryService = appRegistryService;
 		this.metadataResolver = metadataResolver;
 		this.forkJoinPool = forkJoinPool;
-		this.mavenProperties = mavenProperties;
+		this.resourceService = resourceService;
 	}
 
 	/**
@@ -200,7 +199,7 @@ public class VersionedAppRegistryController {
 	public void register(@PathVariable("type") ApplicationType type, @PathVariable("name") String name,
 			@RequestParam("uri") String uri, @RequestParam(name = "metadata-uri", required = false) String metadataUri,
 			@RequestParam(value = "force", defaultValue = "false") boolean force) {
-		String version = ResourceUtils.getResourceVersion(uri, this.mavenProperties);
+		String version = resourceService.getResourceVersion(uri);
 		this.register(type, name, version, uri, metadataUri, force);
 	}
 

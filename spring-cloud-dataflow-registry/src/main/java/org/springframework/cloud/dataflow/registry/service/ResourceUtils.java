@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.springframework.cloud.dataflow.registry.support;
+package org.springframework.cloud.dataflow.registry.service;
 
 import java.io.File;
 import java.io.IOException;
@@ -37,6 +37,7 @@ import org.springframework.util.StringUtils;
 /**
  * @author Mark Pollack
  * @author Ilayaperumal Gopinathan
+ * @author Christian Tzolov
  */
 public class ResourceUtils {
 
@@ -49,12 +50,12 @@ public class ResourceUtils {
 	 * @param urlResource
 	 * @return
 	 */
-	public static String getUrlResourceVersion(UrlResource urlResource) {
+	static String getUrlResourceVersion(UrlResource urlResource) {
 		Matcher m = getMatcher(urlResource);
 		return m.group(2) + m.group(3);
 	}
 
-	public static String getUrlResourceWithoutVersion(UrlResource urlResource) {
+	static String getUrlResourceWithoutVersion(UrlResource urlResource) {
 		String version = getUrlResourceVersion(urlResource);
 		URI uri = getUri(urlResource);
 		String theRest = uri.toString().substring(0, uri.toString().indexOf("-" + version));
@@ -100,7 +101,7 @@ public class ResourceUtils {
 	 * @param mavenProperties the maven properties to use in case of maven resource
 	 * @return the resource instance
 	 */
-	public static Resource getResource(String uriString, MavenProperties mavenProperties) {
+	static Resource getResource(String uriString, MavenProperties mavenProperties) {
 		Assert.isTrue(StringUtils.hasText(uriString), "Resource URI must not be empty");
 		try {
 			URI uri = new URI(uriString);
@@ -135,7 +136,7 @@ public class ResourceUtils {
 	 * MavenResource}, {@link DockerResource}, and {@link UrlResource}. @param resource to be
 	 * used. @return the version the resource. @throws
 	 */
-	public static String getResourceVersion(Resource resource) {
+	static String getResourceVersion(Resource resource) {
 		Assert.notNull(resource, "resource must not be null");
 		if (resource instanceof MavenResource) {
 			MavenResource mavenResource = (MavenResource) resource;
@@ -161,7 +162,7 @@ public class ResourceUtils {
 	 * @param mavenProperties the maven properties to use in case of maven resource
 	 * @return the resource version
 	 */
-	public static String getResourceVersion(String uriString, MavenProperties mavenProperties) {
+	static String getResourceVersion(String uriString, MavenProperties mavenProperties) {
 		return ResourceUtils.getResourceVersion(getResource(uriString, mavenProperties));
 	}
 
@@ -187,7 +188,7 @@ public class ResourceUtils {
 	 * @param resource to be used.
 	 * @return String representation of the resource.
 	 */
-	public static String getResourceWithoutVersion(Resource resource) {
+	static String getResourceWithoutVersion(Resource resource) {
 		Assert.notNull(resource, "resource must not be null");
 		if (resource instanceof MavenResource) {
 			MavenResource mavenResource = (MavenResource) resource;

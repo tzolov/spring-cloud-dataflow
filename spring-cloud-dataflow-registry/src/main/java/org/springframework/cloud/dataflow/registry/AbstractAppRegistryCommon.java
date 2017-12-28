@@ -16,17 +16,15 @@ import org.slf4j.LoggerFactory;
 
 import org.springframework.cloud.dataflow.core.ApplicationType;
 import org.springframework.cloud.dataflow.registry.domain.AppRegistration;
-import org.springframework.cloud.dataflow.registry.support.ResourceUtils;
-import org.springframework.cloud.deployer.resource.maven.MavenProperties;
+import org.springframework.cloud.dataflow.registry.service.ResourceService;
 import org.springframework.core.io.Resource;
-import org.springframework.core.io.ResourceLoader;
 import org.springframework.core.io.support.PropertiesLoaderUtils;
 import org.springframework.util.Assert;
 import org.springframework.util.StringUtils;
 
 /**
  * {@link AppRegistryCommon} implementation common for the Classic and the Skipper modes.
- * 
+ *
  * @author Christian Tzolov
  * @author Ilayaperumal Gopinathan
  */
@@ -36,28 +34,20 @@ public abstract class AbstractAppRegistryCommon implements AppRegistryCommon {
 
 	public static final String METADATA_KEY_SUFFIX = "metadata";
 
-	protected ResourceLoader resourceLoader;
+	protected ResourceService resourceService;
 
-	protected MavenProperties mavenProperties;
-
-	public AbstractAppRegistryCommon(ResourceLoader resourceLoader) {
-		this.resourceLoader = resourceLoader;
-	}
-
-	public AbstractAppRegistryCommon(ResourceLoader resourceLoader, MavenProperties mavenProperties) {
-		this.resourceLoader = resourceLoader;
-		this.mavenProperties = mavenProperties;
+	public AbstractAppRegistryCommon(ResourceService resourceService) {
+		this.resourceService = resourceService;
 	}
 
 	@Override
 	public Resource getAppResource(AppRegistration appRegistration) {
-		return ResourceUtils.getResource(appRegistration.getUri().toString(), this.mavenProperties);
+		return resourceService.getResource(appRegistration.getUri().toString());
 	}
 
 	@Override
 	public Resource getAppMetadataResource(AppRegistration appRegistration) {
-		return appRegistration.getMetadataUri() != null ? this.resourceLoader.getResource(
-				appRegistration.getMetadataUri().toString()) : null;
+		return resourceService.getAppMetadataResource(appRegistration.getMetadataUri());
 	}
 
 	protected Properties loadProperties(Resource resource) {
@@ -126,7 +116,7 @@ public abstract class AbstractAppRegistryCommon implements AppRegistryCommon {
 
 	private String getVersionOrBroken(String uri) {
 		try {
-			return ResourceUtils.getResourceVersion(uri, this.mavenProperties);
+			return this.resourceService.getResourceVersion(uri);
 		}
 		catch (IllegalStateException ise) {
 			logger.warn("", ise);

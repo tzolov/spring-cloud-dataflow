@@ -39,7 +39,7 @@ import org.yaml.snakeyaml.Yaml;
 
 import org.springframework.cloud.dataflow.core.StreamDefinition;
 import org.springframework.cloud.dataflow.core.StreamDeployment;
-import org.springframework.cloud.dataflow.registry.support.ResourceUtils;
+import org.springframework.cloud.dataflow.registry.service.ResourceService;
 import org.springframework.cloud.dataflow.server.controller.StreamDefinitionController;
 import org.springframework.cloud.dataflow.server.repository.StreamDeploymentRepository;
 import org.springframework.cloud.deployer.spi.app.AppInstanceStatus;
@@ -89,11 +89,16 @@ public class SkipperStreamDeployer implements StreamDeployer {
 
 	private final StreamDeploymentRepository streamDeploymentRepository;
 
-	public SkipperStreamDeployer(SkipperClient skipperClient, StreamDeploymentRepository streamDeploymentRepository) {
+	private final ResourceService resourceService;
+
+	public SkipperStreamDeployer(SkipperClient skipperClient, StreamDeploymentRepository streamDeploymentRepository,
+			ResourceService resourceService) {
 		Assert.notNull(skipperClient, "SkipperClient can not be null");
 		Assert.notNull(streamDeploymentRepository, "StreamDeploymentRepository can not be null");
+		Assert.notNull(resourceService, "ResourceService can not be null");
 		this.skipperClient = skipperClient;
 		this.streamDeploymentRepository = streamDeploymentRepository;
+		this.resourceService = resourceService;
 	}
 
 	public static List<AppStatus> deserializeAppStatus(String platformStatus) {
@@ -258,7 +263,8 @@ public class SkipperStreamDeployer implements StreamDeployer {
 
 		// Add version, including possible override via deploymentProperties - hack to store
 		// version in cmdline args
-		String version = ResourceUtils.getResourceVersion(appDeploymentRequest.getResource());
+		String version = resourceService.getResourceVersion(appDeploymentRequest.getResource());
+
 		if (appDeploymentRequest.getCommandlineArguments().size() == 1) {
 			configValueMap.put("version", appDeploymentRequest.getCommandlineArguments().get(0));
 		}
@@ -270,7 +276,8 @@ public class SkipperStreamDeployer implements StreamDeployer {
 		metadataMap.put("name", packageName);
 
 		// Add spec
-		String resourceWithoutVersion = ResourceUtils.getResourceWithoutVersion(appDeploymentRequest.getResource());
+		String resourceWithoutVersion = resourceService.getResourceWithoutVersion(appDeploymentRequest.getResource());
+
 		specMap.put("resource", resourceWithoutVersion);
 		specMap.put("applicationProperties", appDeploymentRequest.getDefinition().getProperties());
 		specMap.put("deploymentProperties", appDeploymentRequest.getDeploymentProperties());
