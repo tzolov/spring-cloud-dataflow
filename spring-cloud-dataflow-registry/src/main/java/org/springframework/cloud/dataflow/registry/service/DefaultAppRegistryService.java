@@ -17,8 +17,13 @@
 package org.springframework.cloud.dataflow.registry.service;
 
 import java.net.URI;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
+import com.github.zafarkhaja.semver.Version;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -34,6 +39,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.Assert;
+import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
 
 /**
@@ -62,6 +68,8 @@ public class DefaultAppRegistryService extends AbstractAppRegistryCommon impleme
 
 	private static final Logger logger = LoggerFactory.getLogger(DefaultAppRegistryService.class);
 
+	private final static Pattern VERSION_PATTERN = Pattern.compile("(\\d?\\d?\\d.\\d?\\d?\\d.\\d?\\d?\\d).([-\\w.]*)");
+	
 	private final AppRegistrationRepository appRegistrationRepository;
 
 	public DefaultAppRegistryService(AppRegistrationRepository appRegistrationRepository,
@@ -166,7 +174,26 @@ public class DefaultAppRegistryService extends AbstractAppRegistryCommon impleme
 	 */
 	public void delete(String name, ApplicationType type, String version) {
 		this.appRegistrationRepository.deleteAppRegistrationByNameAndTypeAndVersion(name, type, version);
-		// TODO select new default
+		// If the default app is removed and there are more apps with same name and type, then
+		// select as a default the (name, type) app with highest version.
+		if (getDefaultApp(name, type) == null) {
+			List<AppRegistration> apps = this.appRegistrationRepository.findAllByTypeAndName(type, name);
+			if (!CollectionUtils.isEmpty(apps)) {
+				setDefaultApp(name, type, findAppWithMaxVersion(apps).getVersion());
+			}
+		}
+	}
+
+	private AppRegistration findAppWithMaxVersion(List<AppRegistration> apps) {
+		return Collections.max(apps, Comparator.comparing(o -> Version.valueOf(toSemanticVerFormat(o.getVersion()))));
+	}
+
+	private String toSemanticVerFormat(String version) {
+		Matcher m = VERSION_PATTERN.matcher(version);
+		if (m.find()) {
+			return m.group(1) + "-" + m.group(2);
+		}
+		throw new IllegalStateException("Invalid version format:" + version);
 	}
 
 	@Override

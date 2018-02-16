@@ -25,6 +25,8 @@ public interface AppRegistrationRepository extends PagingAndSortingRepository<Ap
 
 	Page<AppRegistration> findAllByTypeAndNameContainingIgnoreCase(ApplicationType type, String name, Pageable pageable);
 
+	List<AppRegistration> findAllByTypeAndName(ApplicationType type, String name);
+
 	Page<AppRegistration> findAllByType(ApplicationType type, Pageable pageable);
 
 	Page<AppRegistration> findAllByNameContainingIgnoreCase(String name, Pageable pageable);
