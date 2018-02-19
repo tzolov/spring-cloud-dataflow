@@ -33,10 +33,12 @@ import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
 
 import org.springframework.cloud.dataflow.configuration.metadata.BootApplicationConfigurationMetadataResolver;
+import org.springframework.cloud.dataflow.core.ApplicationType;
 import org.springframework.cloud.dataflow.core.StreamDefinition;
 import org.springframework.cloud.dataflow.core.StreamDeployment;
 import org.springframework.cloud.dataflow.registry.AppRegistryCommon;
 import org.springframework.cloud.dataflow.server.config.apps.CommonApplicationProperties;
+import org.springframework.cloud.dataflow.server.controller.support.InvalidStreamDefinitionException;
 import org.springframework.cloud.dataflow.server.repository.StreamDefinitionRepository;
 import org.springframework.cloud.dataflow.server.repository.StreamDeploymentRepository;
 import org.springframework.cloud.dataflow.server.stream.SkipperStreamDeployer;
@@ -100,7 +102,7 @@ public class SkipperStreamServiceTests {
 				mock(CommonApplicationProperties.class),
 				new BootApplicationConfigurationMetadataResolver());
 		this.skipperStreamService = new SkipperStreamService(streamDefinitionRepository,
-				this.skipperStreamDeployer, this.appDeploymentRequestCreator);
+				this.skipperStreamDeployer, this.appDeploymentRequestCreator, this.appRegistryCommon);
 		this.streamDefinitionList.add(streamDefinition1);
 		this.streamDefinitionList.add(streamDefinition2);
 		this.streamDefinitionList.add(streamDefinition3);
@@ -111,6 +113,46 @@ public class SkipperStreamServiceTests {
 		when(streamDeploymentRepository.findOne(streamDeployment1.getStreamName())).thenReturn(streamDeployment1);
 		when(streamDeploymentRepository.findOne(streamDeployment2.getStreamName())).thenReturn(streamDeployment2);
 		when(streamDeploymentRepository.findOne(streamDeployment3.getStreamName())).thenReturn(streamDeployment3);
+	}
+
+	@Test
+	public void createStream() {
+		when(this.appRegistryCommon.appExist("time", ApplicationType.source)).thenReturn(true);
+		when(this.appRegistryCommon.appExist("log", ApplicationType.sink)).thenReturn(true);
+
+		this.skipperStreamService.createStream("testStream", "time | log", false);
+
+		verify(this.appRegistryCommon).appExist("time", ApplicationType.source);
+		verify(this.appRegistryCommon).appExist("log", ApplicationType.sink);
+		verify(this.streamDefinitionRepository).save(new StreamDefinition("testStream", "time | log"));
+
+		verifyNoMoreInteractions(this.skipperStreamDeployer);
+		verifyNoMoreInteractions(this.appRegistryCommon);
+		verifyNoMoreInteractions(this.skipperStreamDeployer);
+	}
+
+	@Test
+	public void createStreamWithMissingApps() {
+		when(this.appRegistryCommon.appExist("time", ApplicationType.source)).thenReturn(false);
+		when(this.appRegistryCommon.appExist("log", ApplicationType.sink)).thenReturn(false);
+
+		thrown.expect(InvalidStreamDefinitionException.class);
+		thrown.expectMessage("Application name 'time' with type 'source' does not exist in the app registry.\n" +
+				"Application name 'log' with type 'sink' does not exist in the app registry.");
+
+		this.skipperStreamService.createStream("testStream", "time | log", false);
+	}
+
+	@Test
+	public void createStreamInvalidDsl() {
+		when(this.appRegistryCommon.appExist("time", ApplicationType.source)).thenReturn(true);
+		when(this.appRegistryCommon.appExist("log", ApplicationType.sink)).thenReturn(true);
+
+		thrown.expect(InvalidStreamDefinitionException.class);
+		thrown.expectMessage("Cannot determine application type for application 'testStream': koza had " +
+				"neither input nor output set");
+
+		this.skipperStreamService.createStream("testStream", "koza", false);
 	}
 
 	@Test
@@ -236,7 +278,7 @@ public class SkipperStreamServiceTests {
 		streamDefinitionRepository = mock(StreamDefinitionRepository.class);
 
 		this.skipperStreamService = new SkipperStreamService(streamDefinitionRepository,
-				this.skipperStreamDeployer, this.appDeploymentRequestCreator);
+				this.skipperStreamDeployer, this.appDeploymentRequestCreator, this.appRegistryCommon);
 
 		StreamDefinition streamDefinition = new StreamDefinition("test1", "time | log");
 

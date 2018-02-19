@@ -50,16 +50,16 @@ import org.springframework.cloud.dataflow.server.config.apps.CommonApplicationPr
 import org.springframework.cloud.dataflow.server.config.features.FeaturesProperties;
 import org.springframework.cloud.dataflow.server.controller.AboutController;
 import org.springframework.cloud.dataflow.server.controller.AppRegistryController;
-import org.springframework.cloud.dataflow.server.controller.StreamDeploymentController;
 import org.springframework.cloud.dataflow.server.controller.CompletionController;
 import org.springframework.cloud.dataflow.server.controller.MetricsController;
 import org.springframework.cloud.dataflow.server.controller.RestControllerAdvice;
 import org.springframework.cloud.dataflow.server.controller.RuntimeAppsController;
-import org.springframework.cloud.dataflow.server.controller.UpdatableStreamDeploymentController;
 import org.springframework.cloud.dataflow.server.controller.StreamDefinitionController;
+import org.springframework.cloud.dataflow.server.controller.StreamDeploymentController;
 import org.springframework.cloud.dataflow.server.controller.TaskDefinitionController;
 import org.springframework.cloud.dataflow.server.controller.TaskExecutionController;
 import org.springframework.cloud.dataflow.server.controller.ToolsController;
+import org.springframework.cloud.dataflow.server.controller.UpdatableStreamDeploymentController;
 import org.springframework.cloud.dataflow.server.controller.VersionedAppRegistryController;
 import org.springframework.cloud.dataflow.server.controller.support.ApplicationsMetrics;
 import org.springframework.cloud.dataflow.server.controller.support.ApplicationsMetrics.Application;
@@ -185,16 +185,19 @@ public class TestDependencies extends WebMvcConfigurationSupport {
 	@Bean
 	@ConditionalOnSkipperEnabled
 	public UpdatableStreamService skipperStreamService(StreamDefinitionRepository streamDefinitionRepository,
-			SkipperStreamDeployer skipperStreamDeployer, AppDeploymentRequestCreator appDeploymentRequestCreator) {
-		return new SkipperStreamService(streamDefinitionRepository, skipperStreamDeployer, appDeploymentRequestCreator);
+			SkipperStreamDeployer skipperStreamDeployer, AppDeploymentRequestCreator appDeploymentRequestCreator,
+			AppRegistryCommon appRegistry) {
+		return new SkipperStreamService(streamDefinitionRepository, skipperStreamDeployer,
+				appDeploymentRequestCreator, appRegistry);
 	}
 
 	@Bean
 	@ConditionalOnSkipperDisabled
 	public StreamService simpleStreamService(StreamDefinitionRepository streamDefinitionRepository,
-			AppDeployerStreamDeployer appDeployerStreamDeployer, AppDeploymentRequestCreator appDeploymentRequestCreator) {
+			AppDeployerStreamDeployer appDeployerStreamDeployer,
+			AppDeploymentRequestCreator appDeploymentRequestCreator, AppRegistryCommon appRegistry) {
 		return new AppDeployerStreamService(streamDefinitionRepository, appDeployerStreamDeployer,
-				appDeploymentRequestCreator);
+				appDeploymentRequestCreator, appRegistry);
 	}
 
 	@Bean
@@ -232,8 +235,8 @@ public class TestDependencies extends WebMvcConfigurationSupport {
 
 	@Bean
 	public StreamDefinitionController streamDefinitionController(StreamDefinitionRepository repository,
-			StreamService streamService, AppRegistryCommon appRegistryCommon) {
-		return new StreamDefinitionController(repository, appRegistryCommon, streamService);
+			StreamService streamService) {
+		return new StreamDefinitionController(repository, streamService);
 	}
 
 	@Bean

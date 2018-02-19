@@ -64,7 +64,6 @@ import org.springframework.cloud.dataflow.server.config.apps.CommonApplicationPr
 import org.springframework.cloud.dataflow.server.config.features.FeaturesProperties;
 import org.springframework.cloud.dataflow.server.controller.AboutController;
 import org.springframework.cloud.dataflow.server.controller.AppRegistryController;
-import org.springframework.cloud.dataflow.server.controller.StreamDeploymentController;
 import org.springframework.cloud.dataflow.server.controller.CompletionController;
 import org.springframework.cloud.dataflow.server.controller.JobExecutionController;
 import org.springframework.cloud.dataflow.server.controller.JobInstanceController;
@@ -75,12 +74,13 @@ import org.springframework.cloud.dataflow.server.controller.RestControllerAdvice
 import org.springframework.cloud.dataflow.server.controller.RootController;
 import org.springframework.cloud.dataflow.server.controller.RuntimeAppsController;
 import org.springframework.cloud.dataflow.server.controller.RuntimeAppsController.AppInstanceController;
-import org.springframework.cloud.dataflow.server.controller.UpdatableStreamDeploymentController;
 import org.springframework.cloud.dataflow.server.controller.StreamDefinitionController;
+import org.springframework.cloud.dataflow.server.controller.StreamDeploymentController;
 import org.springframework.cloud.dataflow.server.controller.TaskDefinitionController;
 import org.springframework.cloud.dataflow.server.controller.TaskExecutionController;
 import org.springframework.cloud.dataflow.server.controller.ToolsController;
 import org.springframework.cloud.dataflow.server.controller.UiController;
+import org.springframework.cloud.dataflow.server.controller.UpdatableStreamDeploymentController;
 import org.springframework.cloud.dataflow.server.controller.VersionedAppRegistryController;
 import org.springframework.cloud.dataflow.server.controller.security.LoginController;
 import org.springframework.cloud.dataflow.server.controller.security.SecurityController;
@@ -167,8 +167,8 @@ public class DataFlowControllerAutoConfiguration {
 	@Bean
 	@ConditionalOnBean(StreamDefinitionRepository.class)
 	public StreamDefinitionController streamDefinitionController(StreamDefinitionRepository repository,
-			AppRegistryCommon appRegistry, StreamService streamService) {
-		return new StreamDefinitionController(repository, appRegistry, streamService);
+			StreamService streamService) {
+		return new StreamDefinitionController(repository, streamService);
 	}
 
 
@@ -214,9 +214,10 @@ public class DataFlowControllerAutoConfiguration {
 		@Bean
 		@ConditionalOnBean(StreamDefinitionRepository.class)
 		public UpdatableStreamService skipperStreamDeploymentService(StreamDefinitionRepository streamDefinitionRepository,
-				SkipperStreamDeployer skipperStreamDeployer, AppDeploymentRequestCreator appDeploymentRequestCreator) {
+				SkipperStreamDeployer skipperStreamDeployer, AppDeploymentRequestCreator appDeploymentRequestCreator,
+				AppRegistryCommon appRegistry) {
 			return new SkipperStreamService(streamDefinitionRepository, skipperStreamDeployer,
-					appDeploymentRequestCreator);
+					appDeploymentRequestCreator, appRegistry);
 		}
 
 		@Bean
@@ -248,10 +249,9 @@ public class DataFlowControllerAutoConfiguration {
 		@ConditionalOnBean({ StreamDefinitionRepository.class, StreamDeploymentRepository.class })
 		public StreamService simpleStreamDeploymentService(StreamDefinitionRepository streamDefinitionRepository,
 				AppDeployerStreamDeployer appDeployerStreamDeployer,
-				AppDeploymentRequestCreator appDeploymentRequestCreator) {
-			return new AppDeployerStreamService(streamDefinitionRepository,
-					appDeployerStreamDeployer,
-					appDeploymentRequestCreator);
+				AppDeploymentRequestCreator appDeploymentRequestCreator, AppRegistryCommon appRegistry) {
+			return new AppDeployerStreamService(streamDefinitionRepository, appDeployerStreamDeployer,
+					appDeploymentRequestCreator, appRegistry);
 		}
 
 		@Bean

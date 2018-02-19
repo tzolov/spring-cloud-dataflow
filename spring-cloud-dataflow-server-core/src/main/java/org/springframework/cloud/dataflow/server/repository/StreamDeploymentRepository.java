@@ -27,7 +27,7 @@ public interface StreamDeploymentRepository {
 	/**
 	 * Store Stream deployment entry.
 	 *
-	 * @param streamDeployment the stream deployment to save
+	 * @param streamDeployment the stream deployment to createStream
 	 * @return the streamDeployment that is saved
 	 */
 	StreamDeployment save(StreamDeployment streamDeployment);

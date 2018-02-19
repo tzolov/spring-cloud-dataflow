@@ -35,7 +35,6 @@ import org.springframework.cloud.dataflow.core.BindingPropertyKeys;
 import org.springframework.cloud.dataflow.core.StreamAppDefinition;
 import org.springframework.cloud.dataflow.core.StreamDefinition;
 import org.springframework.cloud.dataflow.core.StreamPropertyKeys;
-import org.springframework.cloud.dataflow.registry.AppRegistry;
 import org.springframework.cloud.dataflow.server.config.apps.CommonApplicationProperties;
 import org.springframework.cloud.dataflow.server.configuration.TestDependencies;
 import org.springframework.cloud.dataflow.server.repository.DeploymentIdRepository;
@@ -43,10 +42,7 @@ import org.springframework.cloud.dataflow.server.repository.DeploymentKey;
 import org.springframework.cloud.dataflow.server.repository.InMemoryStreamDefinitionRepository;
 import org.springframework.cloud.dataflow.server.repository.StreamDefinitionRepository;
 import org.springframework.cloud.dataflow.server.service.StreamService;
-import org.springframework.cloud.deployer.resource.maven.MavenProperties;
 import org.springframework.cloud.deployer.resource.maven.MavenResource;
-import org.springframework.cloud.deployer.resource.maven.MavenResourceLoader;
-import org.springframework.cloud.deployer.resource.registry.InMemoryUriRegistry;
 import org.springframework.cloud.deployer.spi.app.AppDeployer;
 import org.springframework.cloud.deployer.spi.app.AppInstanceStatus;
 import org.springframework.cloud.deployer.spi.app.AppStatus;
@@ -93,14 +89,12 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  * @author Janne Valkealahti
  * @author Gunnar Hillert
  * @author Glenn Renfro
+ * @author Christian Tzolov
  */
 @RunWith(SpringRunner.class)
 @SpringBootTest(classes = TestDependencies.class)
 @DirtiesContext(classMode = ClassMode.AFTER_EACH_TEST_METHOD)
 public class StreamControllerTests {
-
-	private final AppRegistry appRegistry = new AppRegistry(new InMemoryUriRegistry(),
-			new MavenResourceLoader(new MavenProperties()));
 
 	@Autowired
 	private StreamDefinitionRepository repository;
@@ -142,12 +136,12 @@ public class StreamControllerTests {
 	public void testConstructorMissingRepository() {
 		StreamDeploymentController deploymentController = new StreamDeploymentController(
 				new InMemoryStreamDefinitionRepository(), defaultStreamService);
-		new StreamDefinitionController(null, appRegistry, defaultStreamService);
+		new StreamDefinitionController(null, defaultStreamService);
 	}
 
 	@Test(expected = IllegalArgumentException.class)
 	public void testConstructorMissingStreamService() {
-		new StreamDefinitionController(new InMemoryStreamDefinitionRepository(), appRegistry, null);
+		new StreamDefinitionController(new InMemoryStreamDefinitionRepository(), null);
 	}
 
 	@Test
@@ -345,7 +339,7 @@ public class StreamControllerTests {
 	}
 
 	@Test
-	public void testSaveInvalidAppDefintions() throws Exception {
+	public void testSaveInvalidAppDefinitions() throws Exception {
 		mockMvc.perform(post("/streams/definitions/").param("name", "myStream").param("definition", "foo | bar")
 				.accept(MediaType.APPLICATION_JSON)).andDo(print()).andExpect(status().isBadRequest())
 				.andExpect(jsonPath("$[0].logref", is("InvalidStreamDefinitionException")))
@@ -356,7 +350,7 @@ public class StreamControllerTests {
 	}
 
 	@Test
-	public void testSaveInvalidAppDefintionsDueToParseException() throws Exception {
+	public void testSaveInvalidAppDefinitionsDueToParseException() throws Exception {
 		mockMvc.perform(post("/streams/definitions/").param("name", "myStream")
 				.param("definition", "foo --.spring.cloud.stream.metrics.properties=spring* | bar")
 				.accept(MediaType.APPLICATION_JSON)).andDo(print()).andExpect(status().isBadRequest())
@@ -370,8 +364,8 @@ public class StreamControllerTests {
 		mockMvc.perform(post("/streams/definitions/").param("name", "myStream").param("definition", "foooooo")
 				.accept(MediaType.APPLICATION_JSON)).andDo(print()).andExpect(status().isBadRequest())
 				.andExpect(jsonPath("$[0].logref", is("InvalidStreamDefinitionException")))
-				.andExpect(jsonPath("$[0].message", is("Cannot determine application type for application 'foooooo': "
-						+ "foooooo had neither input nor output set")));
+				.andExpect(jsonPath("$[0].message", is("Cannot determine application type for " +
+						"application 'myStream': foooooo had neither input nor output set")));
 	}
 
 	@Test
