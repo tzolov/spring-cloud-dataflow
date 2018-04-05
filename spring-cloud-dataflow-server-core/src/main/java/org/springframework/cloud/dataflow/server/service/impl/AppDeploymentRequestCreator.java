@@ -309,7 +309,8 @@ public class AppDeploymentRequestCreator {
 
 		merged.putIfAbsent(StreamPropertyKeys.METRICS_PROPERTIES, "spring.application.name,spring.application.index,"
 				+ "spring.cloud.application.*,spring.cloud.dataflow.*");
-		merged.putIfAbsent(StreamPropertyKeys.METRICS_TRIGGER_INCLUDES, "integration**");
+		merged.putIfAbsent(StreamPropertyKeys.METRICS_PREFIX + "meter-filter", "spring.integration.*");
+//		merged.putIfAbsent(StreamPropertyKeys.METRICS_TRIGGER_INCLUDES, "integration**");
 
 		return new AppDefinition(original.getName(), merged);
 	}
