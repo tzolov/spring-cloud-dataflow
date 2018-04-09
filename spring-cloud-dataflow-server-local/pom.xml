@@ -71,6 +71,21 @@
 
 	<dependencies>
 		<dependency>
+			<groupId>com.netflix.atlas_v1</groupId>
+			<artifactId>atlas-module-akka_2.12</artifactId>
+			<version>1.6.0-rc.8</version>
+		</dependency>
+		<dependency>
+			<groupId>com.netflix.atlas_v1</groupId>
+			<artifactId>atlas-module-lwcapi_2.12</artifactId>
+			<version>1.6.0-rc.8</version>
+		</dependency>
+		<dependency>
+			<groupId>com.netflix.atlas_v1</groupId>
+			<artifactId>atlas-module-webapi_2.12</artifactId>
+			<version>1.6.0-rc.8</version>
+		</dependency>
+		<dependency>
 			<groupId>org.hibernate</groupId>
 			<artifactId>hibernate-core</artifactId>
 			<version>5.2.12.Final</version>
@@ -262,6 +277,11 @@
 					<snapshots>
 						<enabled>false</enabled>
 					</snapshots>
+				</repository>
+				<repository>
+					<id>netflixoss</id>
+					<name>netflixoss</name>
+					<url>https://dl.bintray.com/netflixoss/maven/</url>
 				</repository>
 			</repositories>
 			<pluginRepositories>

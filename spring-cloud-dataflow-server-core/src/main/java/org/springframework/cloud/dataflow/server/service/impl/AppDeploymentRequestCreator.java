@@ -268,7 +268,7 @@ public class AppDeploymentRequestCreator {
 				Map<String, String> appDeploymentProperties = extractAppProperties(prevApp, streamDeploymentProperties);
 				return appDeploymentProperties.containsKey(BindingPropertyKeys.OUTPUT_PARTITION_KEY_EXPRESSION)
 						|| appDeploymentProperties
-								.containsKey(BindingPropertyKeys.OUTPUT_PARTITION_KEY_EXTRACTOR_CLASS);
+						.containsKey(BindingPropertyKeys.OUTPUT_PARTITION_KEY_EXTRACTOR_CLASS);
 			}
 		}
 		return false;
@@ -310,7 +310,7 @@ public class AppDeploymentRequestCreator {
 		merged.putIfAbsent(StreamPropertyKeys.METRICS_PROPERTIES, "spring.application.name,spring.application.index,"
 				+ "spring.cloud.application.*,spring.cloud.dataflow.*");
 		merged.putIfAbsent(StreamPropertyKeys.METRICS_PREFIX + "meter-filter", "spring.integration.*");
-//		merged.putIfAbsent(StreamPropertyKeys.METRICS_TRIGGER_INCLUDES, "integration**");
+		//merged.putIfAbsent(StreamPropertyKeys.METRICS_TRIGGER_INCLUDES, "integration**");
 
 		return new AppDefinition(original.getName(), merged);
 	}
@@ -363,7 +363,7 @@ public class AppDeploymentRequestCreator {
 			boolean upstreamAppSupportsPartition) {
 		return upstreamAppSupportsPartition
 				|| (appDeploymentProperties.containsKey(BindingPropertyKeys.INPUT_PARTITIONED)
-						&& appDeploymentProperties.get(BindingPropertyKeys.INPUT_PARTITIONED).equalsIgnoreCase("true"));
+				&& appDeploymentProperties.get(BindingPropertyKeys.INPUT_PARTITIONED).equalsIgnoreCase("true"));
 	}
 
 }
