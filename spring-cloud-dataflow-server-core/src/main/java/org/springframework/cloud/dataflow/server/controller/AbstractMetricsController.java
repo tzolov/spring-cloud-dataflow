@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 the original author or authors.
+ * Copyright 2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,30 +19,17 @@ package org.springframework.cloud.dataflow.server.controller;
 import java.util.List;
 
 import org.springframework.cloud.dataflow.server.controller.support.ApplicationsMetrics;
-import org.springframework.cloud.dataflow.server.controller.support.MetricStore;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RestController;
 
 /**
- * Controller handling metrics requests for as a passthrough to collector.
- *
- * @author Janne Valkealahti
+ * @author Christian Tzolov
  */
-public class MetricsController extends AbstractMetricsController {
-
-	private final MetricStore metricStore;
-
-	/**
-	 * Instantiates a new metrics controller.
-	 *
-	 * @param metricStore the metric store
-	 */
-	public MetricsController(MetricStore metricStore) {
-		this.metricStore = metricStore;
-	}
+@RestController
+@RequestMapping("/metrics/streams")
+public abstract class AbstractMetricsController {
 
 	@RequestMapping(method = RequestMethod.GET)
-	public List<ApplicationsMetrics> list() {
-		return metricStore.getMetrics();
-	}
+	abstract public List<ApplicationsMetrics> list();
 }

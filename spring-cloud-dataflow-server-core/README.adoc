@@ -19,3 +19,48 @@ process on the same host as the `LocalDataFlowServer` itself. By default the loc
 auto-populated with apps generated from the
 link:https://github.com/spring-cloud/spring-cloud-stream-app-starters[`spring-cloud-stream-app-starters`]
 project.
+
+==== Embedded Atlas Metrics Server
+To start SCDF with an embedded Atlas server (https://github.com/Netflix/atlas/wiki) pass  the following
+SCDF server properties:
+
+```
+--spring.cloud.dataflow.metrics.atlas.server.enabled=true
+--spring.cloud.dataflow.metrics.collector.uri=http://localhost:7101
+--spring.cloud.dataflow.applicationProperties.stream.management.metrics.export.atlas.enabled=true
+```
+The `spring.cloud.dataflow.metrics.atlas.server.enabled=true` would start an embedded Atlas server
+at `http://localhost:7101`. It would also replace the `MetricController.java` by the `AtlasMetricsController`.
+Later uses the embedded Atlas server (as a metric collector)
+to serve metrics to the SCDF-UI. The `spring.cloud.dataflow.metrics.collector.uri` instructs
+the `AtlasMetricsCollector` how to access the Atlas Server.
+The `spring.cloud.dataflow.applicationProperties.stream.management.metrics.export.atlas.enabled` property will enable
+the atlas metrics repository for all SCSt apps that have the metrics-registry-atlas on the classpath.
+
+Make sure that yor SCSt 2.0 applications are compiled with the following auto-starter dependency:
+
+```
+<groupId>org.springframework.cloud.stream.app.micrometer</groupId>
+<artifactId>spring-cloud-stream-starter-common-metrics-tags</artifactId>
+<version>1.0-SNAPSHOT</version>
+```
+
+That comes from: https://github.com/tzolov/spring-cloud-stream-starter-common-metrics-tags
+The `spring-cloud-stream-starter-common-metrics-tags` injects common SCDF tags to the SCSt app metrics. tags such as
+
+```
+	stream -> spring.cloud.dataflow.stream.name
+	applicationName -> spring.cloud.dataflow.stream.app.label
+	instanceIndex -> instance.index
+	applicationGuid -> spring.cloud.application.guid
+	applicationType -> spring.cloud.dataflow.stream.app.type
+```
+
+The `spring-cloud-stream-starter-common-metrics-tags` also disables all micrometer registries by default. E.g. the
+presence of the micrometer registry on the classpath will not activate it unless it explicitly enabled by the
+`spring.cloud.dataflow.metrics.<MonitoringSystem>.server.enabled=true` property.
+
+
+
+
+

@@ -10,6 +10,18 @@
 	</parent>
 	<dependencies>
 		<dependency>
+			<groupId>com.netflix.atlas_v1</groupId>
+			<artifactId>atlas-module-akka_2.12</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>com.netflix.atlas_v1</groupId>
+			<artifactId>atlas-module-lwcapi_2.12</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>com.netflix.atlas_v1</groupId>
+			<artifactId>atlas-module-webapi_2.12</artifactId>
+		</dependency>
+		<dependency>
 			<groupId>org.hibernate</groupId>
 			<artifactId>hibernate-core</artifactId>
 			<version>5.2.12.Final</version>
@@ -203,8 +215,19 @@
 					<include>banner.txt</include>
 					<include>META-INF/dataflow-server-defaults.yml</include>
 					<include>schemas/**</include>
+					<include>memory.conf</include>
 				</includes>
 			</resource>
 		</resources>
 	</build>
+	<repositories>
+		<repository>
+			<id>netflixoss</id>
+			<name>netflixoss</name>
+			<url>https://dl.bintray.com/netflixoss/maven/</url>
+			<snapshots>
+				<enabled>true</enabled>
+			</snapshots>
+		</repository>
+	</repositories>
 </project>

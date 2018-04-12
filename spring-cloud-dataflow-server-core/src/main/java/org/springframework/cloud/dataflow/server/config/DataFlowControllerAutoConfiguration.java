@@ -64,7 +64,9 @@ import org.springframework.cloud.dataflow.server.ConditionalOnSkipperEnabled;
 import org.springframework.cloud.dataflow.server.config.apps.CommonApplicationProperties;
 import org.springframework.cloud.dataflow.server.config.features.FeaturesProperties;
 import org.springframework.cloud.dataflow.server.controller.AboutController;
+import org.springframework.cloud.dataflow.server.controller.AbstractMetricsController;
 import org.springframework.cloud.dataflow.server.controller.AppRegistryController;
+import org.springframework.cloud.dataflow.server.controller.AtlasMetricsController;
 import org.springframework.cloud.dataflow.server.controller.CompletionController;
 import org.springframework.cloud.dataflow.server.controller.JobExecutionController;
 import org.springframework.cloud.dataflow.server.controller.JobInstanceController;
@@ -139,7 +141,7 @@ import org.springframework.web.client.RestTemplate;
 @Configuration
 @Import(CompletionConfiguration.class)
 @ConditionalOnBean({ EnableDataFlowServerConfiguration.Marker.class, TaskLauncher.class })
-@EnableConfigurationProperties({ FeaturesProperties.class, VersionInfoProperties.class, MetricsProperties.class })
+@EnableConfigurationProperties({ FeaturesProperties.class, VersionInfoProperties.class, MetricsProperties.class, AtlasServerProperties.class })
 @ConditionalOnProperty(prefix = "dataflow.server", name = "enabled", havingValue = "true", matchIfMissing = true)
 @EnableCircuitBreaker
 @EntityScan({ "org.springframework.cloud.dataflow.registry.domain" })
@@ -195,7 +197,20 @@ public class DataFlowControllerAutoConfiguration {
 		return new RuntimeAppsController(streamDeployer, metricStore);
 	}
 
+	@Bean(name = "AtlasEmbeddedServer")
+	@ConditionalOnProperty(name = "spring.cloud.dataflow.metrics.atlas.server.enabled", havingValue = "true")
+	public AtlasServerFactoryBean atlasEmbeddedServer(AtlasServerProperties atlasServerProperties) {
+		return new AtlasServerFactoryBean(atlasServerProperties);
+	}
+
 	@Bean
+	@ConditionalOnProperty(name = "spring.cloud.dataflow.metrics.atlas.server.enabled", havingValue = "true")
+	public AtlasMetricsController atlasMetricsController(MetricsProperties metricsProperties) {
+		return new AtlasMetricsController(metricsProperties);
+	}
+
+	@Bean
+	@ConditionalOnMissingBean(AbstractMetricsController.class)
 	public MetricsController metricsController(MetricStore metricStore) {
 		return new MetricsController(metricStore);
 	}
