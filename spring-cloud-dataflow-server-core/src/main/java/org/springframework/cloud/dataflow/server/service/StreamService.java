@@ -55,7 +55,7 @@ public interface StreamService {
 	 * @param name the name of the stream
 	 * @param deploymentProperties deployment properties to use as passed in from the client.
 	 */
-	void deployStream(String name, Map<String, String> deploymentProperties);
+	StreamDefinition deployStream(String name, Map<String, String> deploymentProperties);
 
 
 	/**
@@ -63,18 +63,18 @@ public interface StreamService {
 	 *
 	 * @param name the name of the stream to un-deploy
 	 */
-	void undeployStream(String name);
+	StreamDefinition undeployStream(String name);
 
 	/**
 	 * Delete the stream, including undeloying.
 	 * @param name the name of the stream to delete
 	 */
-	void deleteStream(String name);
+	StreamDefinition deleteStream(String name);
 
 	/**
 	 * Delete all streams, including undeploying.
 	 */
-	void deleteAll();
+	Iterable<StreamDefinition> deleteAll();
 
 	/**
 	 * Retrieve the deployment state for list of stream definitions.

@@ -1,0 +1,13 @@
+<!DOCTYPE aspectj PUBLIC "-//AspectJ//DTD//EN" "http://www.eclipse.org/aspectj/dtd/aspectj.dtd">
+<aspectj>
+	<weaver>
+		<include within="org.springframework.cloud.dataflow.server.controller.*" />
+		<include within="org.springframework.cloud.dataflow.server.service.impl.*" />
+		<include within="org.springframework.boot..*" />
+	</weaver>
+
+	<aspects>
+		<aspect name="org.springframework.cloud.dataflow.server.audit.AuditAspect" />
+	</aspects>
+
+</aspectj>

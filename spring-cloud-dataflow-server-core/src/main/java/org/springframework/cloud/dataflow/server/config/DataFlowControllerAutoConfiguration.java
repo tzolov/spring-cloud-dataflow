@@ -27,6 +27,7 @@ import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.aspectj.lang.Aspects;
 
 import org.springframework.analytics.metrics.AggregateCounterRepository;
 import org.springframework.analytics.metrics.FieldValueCounterRepository;
@@ -64,6 +65,7 @@ import org.springframework.cloud.dataflow.server.ConditionalOnSkipperDisabled;
 import org.springframework.cloud.dataflow.server.ConditionalOnSkipperEnabled;
 import org.springframework.cloud.dataflow.server.DockerValidatorProperties;
 import org.springframework.cloud.dataflow.server.TaskValidationController;
+import org.springframework.cloud.dataflow.server.audit.AuditAspect;
 import org.springframework.cloud.dataflow.server.audit.repository.AuditRecordRepository;
 import org.springframework.cloud.dataflow.server.audit.service.AuditRecordService;
 import org.springframework.cloud.dataflow.server.audit.service.DefaultAuditRecordService;
@@ -430,6 +432,13 @@ public class DataFlowControllerAutoConfiguration {
 	@Bean
 	public SecurityStateBean securityStateBean() {
 		return new SecurityStateBean();
+	}
+
+	@Bean
+	public AuditAspect auditAspect(AuditRecordService auditRecordService) {
+		AuditAspect aspect = Aspects.aspectOf(AuditAspect.class);
+		return aspect;
+		//return new AuditAspect(auditRecordService);
 	}
 
 	@Configuration

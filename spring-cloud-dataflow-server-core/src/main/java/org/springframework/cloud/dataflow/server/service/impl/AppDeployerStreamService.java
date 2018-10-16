@@ -24,8 +24,6 @@ import org.springframework.cloud.dataflow.core.StreamDefinition;
 import org.springframework.cloud.dataflow.core.StreamDeployment;
 import org.springframework.cloud.dataflow.rest.SkipperStream;
 import org.springframework.cloud.dataflow.rest.util.DeploymentPropertiesUtils;
-import org.springframework.cloud.dataflow.server.audit.domain.AuditActionType;
-import org.springframework.cloud.dataflow.server.audit.domain.AuditOperationType;
 import org.springframework.cloud.dataflow.server.audit.service.AuditRecordService;
 import org.springframework.cloud.dataflow.server.repository.NoSuchStreamDefinitionException;
 import org.springframework.cloud.dataflow.server.repository.StreamDefinitionRepository;
@@ -88,15 +86,16 @@ public class AppDeployerStreamService extends AbstractStreamService {
 	}
 
 	@Override
-	public void undeployStream(String streamName) {
+	public StreamDefinition undeployStream(String streamName) {
 		final StreamDefinition streamDefinition = this.streamDefinitionRepository.findOne(streamName);
 		if (streamDefinition == null) {
 			throw new NoSuchStreamDefinitionException(streamName);
 		}
 		this.appDeployerStreamDeployer.undeployStream(streamName);
-		auditRecordService.populateAndSaveAuditRecord(
-				AuditOperationType.STREAM, AuditActionType.UNDEPLOY,
-				streamDefinition.getName(), this.auditServiceUtils.convertStreamDefinitionToAuditData(streamDefinition));
+		//auditRecordService.populateAndSaveAuditRecord(
+		//		AuditOperationType.STREAM, AuditActionType.UNDEPLOY,
+		//		streamDefinition.getName(), this.auditServiceUtils.convertStreamDefinitionToAuditData(streamDefinition));
+		return streamDefinition;
 	}
 
 	@Override

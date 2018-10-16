@@ -28,8 +28,6 @@ import org.springframework.cloud.dataflow.core.StreamDefinition;
 import org.springframework.cloud.dataflow.core.dsl.ParseException;
 import org.springframework.cloud.dataflow.core.dsl.StreamNode;
 import org.springframework.cloud.dataflow.core.dsl.StreamParser;
-import org.springframework.cloud.dataflow.server.audit.domain.AuditActionType;
-import org.springframework.cloud.dataflow.server.audit.domain.AuditOperationType;
 import org.springframework.cloud.dataflow.server.audit.service.AuditRecordService;
 import org.springframework.cloud.dataflow.server.audit.service.AuditServiceUtils;
 import org.springframework.cloud.dataflow.server.controller.StreamAlreadyDeployedException;
@@ -122,9 +120,9 @@ public abstract class AbstractStreamService implements StreamService {
 			this.deployStream(streamName, new HashMap<>());
 		}
 
-		auditRecordService.populateAndSaveAuditRecord(
-				AuditOperationType.STREAM, AuditActionType.CREATE, streamDefinition.getName(),
-				this.auditServiceUtils.convertStreamDefinitionToAuditData(savedStreamDefintion));
+		//auditRecordService.populateAndSaveAuditRecord(
+		//		AuditOperationType.STREAM, AuditActionType.CREATE, streamDefinition.getName(),
+		//		this.auditServiceUtils.convertStreamDefinitionToAuditData(savedStreamDefintion));
 
 		return streamDefinition;
 
@@ -141,7 +139,7 @@ public abstract class AbstractStreamService implements StreamService {
 	}
 
 	@Override
-	public void deployStream(String name, Map<String, String> deploymentProperties) {
+	public StreamDefinition deployStream(String name, Map<String, String> deploymentProperties) {
 		if (deploymentProperties == null) {
 			deploymentProperties = new HashMap<>();
 		}
@@ -160,10 +158,12 @@ public abstract class AbstractStreamService implements StreamService {
 		}
 		doDeployStream(streamDefinition, deploymentProperties);
 
-		auditRecordService.populateAndSaveAuditRecordUsingMapData(
-				AuditOperationType.STREAM, AuditActionType.DEPLOY,
-				streamDefinition.getName(),
-				this.auditServiceUtils.convertStreamDefinitionToAuditData(streamDefinition, deploymentProperties));
+		return streamDefinition;
+
+		//auditRecordService.populateAndSaveAuditRecordUsingMapData(
+		//		AuditOperationType.STREAM, AuditActionType.DEPLOY,
+		//		streamDefinition.getName(),
+		//		this.auditServiceUtils.convertStreamDefinitionToAuditData(streamDefinition, deploymentProperties));
 	}
 
 	protected abstract void doDeployStream(StreamDefinition streamDefinition, Map<String, String> deploymentProperties);
@@ -171,7 +171,7 @@ public abstract class AbstractStreamService implements StreamService {
 	protected abstract DeploymentState doCalculateStreamState(String name);
 
 	@Override
-	public void deleteStream(String name) {
+	public StreamDefinition deleteStream(String name) {
 		final StreamDefinition streamDefinition = this.streamDefinitionRepository.findOne(name);
 		if (streamDefinition == null) {
 			throw new NoSuchStreamDefinitionException(name);
@@ -179,24 +179,26 @@ public abstract class AbstractStreamService implements StreamService {
 		this.undeployStream(name);
 		this.streamDefinitionRepository.delete(name);
 
-		auditRecordService.populateAndSaveAuditRecord(
-				AuditOperationType.STREAM, AuditActionType.DELETE,
-				streamDefinition.getName(), this.auditServiceUtils.convertStreamDefinitionToAuditData(streamDefinition));
+		return streamDefinition;
+		//auditRecordService.populateAndSaveAuditRecord(
+		//		AuditOperationType.STREAM, AuditActionType.DELETE,
+		//		streamDefinition.getName(), this.auditServiceUtils.convertStreamDefinitionToAuditData(streamDefinition));
 	}
 
 	@Override
-	public void deleteAll() {
+	public Iterable<StreamDefinition> deleteAll() {
 		final Iterable<StreamDefinition> streamDefinitions = this.streamDefinitionRepository.findAll();
 		for (StreamDefinition streamDefinition : streamDefinitions) {
 			this.undeployStream(streamDefinition.getName());
 		}
 		this.streamDefinitionRepository.deleteAll();
 
-		for (StreamDefinition streamDefinition : streamDefinitions) {
-			auditRecordService.populateAndSaveAuditRecord(
-					AuditOperationType.STREAM, AuditActionType.DELETE,
-					streamDefinition.getName(), this.auditServiceUtils.convertStreamDefinitionToAuditData(streamDefinition));
-		}
+		return streamDefinitions;
+		//for (StreamDefinition streamDefinition : streamDefinitions) {
+		//	auditRecordService.populateAndSaveAuditRecord(
+		//			AuditOperationType.STREAM, AuditActionType.DELETE,
+		//			streamDefinition.getName(), this.auditServiceUtils.convertStreamDefinitionToAuditData(streamDefinition));
+		//}
 	}
 
 	@Override
