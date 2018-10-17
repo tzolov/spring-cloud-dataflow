@@ -35,6 +35,8 @@ import org.springframework.cloud.dataflow.server.audit.domain.AuditActionType;
 import org.springframework.cloud.dataflow.server.audit.domain.AuditOperationType;
 import org.springframework.cloud.dataflow.server.audit.service.AuditRecordService;
 import org.springframework.cloud.dataflow.server.audit.service.AuditServiceUtils;
+import org.springframework.cloud.dataflow.server.service.impl.DefaultTaskService;
+import org.springframework.cloud.scheduler.spi.core.ScheduleRequest;
 import org.springframework.cloud.skipper.domain.PackageIdentifier;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PagedResourcesAssembler;
@@ -50,22 +52,16 @@ public class AuditAspect {
 	@Autowired
 	protected AuditRecordService auditRecordService;
 
-	private ThreadLocalAuditContextHolder auditContextHolder = new ThreadLocalAuditContextHolder();
-	protected AuditServiceUtils auditServiceUtils = new AuditServiceUtils();
+	private ThreadLocalAuditContextHolder auditContextHolder;
+	protected AuditServiceUtils auditServiceUtils;
 
 	public AuditAspect() {
 		this.auditContextHolder = new ThreadLocalAuditContextHolder();
 		this.auditServiceUtils = new AuditServiceUtils();
 	}
 
-	//public AuditAspect(AuditRecordService auditRecordService) {
-	//	this.auditRecordService = auditRecordService;
-	//	this.auditContextHolder = new ThreadLocalAuditContextHolder();
-	//	this.auditServiceUtils = new AuditServiceUtils();
-	//}
-
 	// --------------------------------------------------------------
-	// App - Classic
+	// App Registration - Classic
 	// --------------------------------------------------------------
 	@Around("execution(* org.springframework.cloud.dataflow.server.controller.AppRegistryController.registerAll(..)) " +
 			"&& args(pageable, pagedResourcesAssembler, uri, apps, force)")
@@ -107,7 +103,7 @@ public class AuditAspect {
 	}
 
 	// --------------------------------------------------------------
-	// App - Skipper
+	// App Registration - Skipper
 	// --------------------------------------------------------------
 	@Around("execution(* org.springframework.cloud.dataflow.server.controller.SkipperAppRegistryController.register(..)) " +
 			"&& args(type, name, version, uri, metadataUri, force)")
@@ -138,7 +134,6 @@ public class AuditAspect {
 		return result;
 	}
 
-
 	@Around("execution(* org.springframework.cloud.dataflow.server.controller.SkipperAppRegistryController.unregister(..)) " +
 			"&& args(type,name,version)")
 	public void unregisterAppSkipper(ProceedingJoinPoint joinPoint, ApplicationType type, String name, String version) throws Throwable {
@@ -149,6 +144,18 @@ public class AuditAspect {
 		auditRecordService.populateAndSaveAuditRecord(
 				AuditOperationType.APP_REGISTRATION, AuditActionType.DELETE, "-",
 				String.format("Unregister App type: %s, name: %s, version: %s", type, name, version));
+	}
+
+	@Around("execution(* org.springframework.cloud.dataflow.server.controller.SkipperAppRegistryController.makeDefault(..)) " +
+			"&& args(type,name,version)")
+	public void makeDefaultSkipper(ProceedingJoinPoint joinPoint, ApplicationType type, String name, String version) throws Throwable {
+
+		logger.info("AOP: makeDefaultSkipper");
+
+		joinPoint.proceed(joinPoint.getArgs());
+		auditRecordService.populateAndSaveAuditRecord(
+				AuditOperationType.APP_REGISTRATION, AuditActionType.UPDATE, "-",
+				String.format("makeDefault App type: %s, name: %s, version: %s", type, name, version));
 	}
 
 
@@ -298,17 +305,85 @@ public class AuditAspect {
 
 		joinPoint.proceed(joinPoint.getArgs());
 
+		// TODO
 		//final String sanatizedUpdateYaml = convertPropertiesToSkipperYaml(streamDefinition,
 		//		this.auditServiceUtils.sanitizeProperties(updateProperties));
 
 		final Map<String, Object> auditedData = new HashMap<>(3);
 		auditedData.put("releaseName", releaseName);
 		auditedData.put("packageIdentifier", packageIdentifier);
-		//auditedData.put("updateYaml", sanatizedUpdateYaml);
+		//auditedData.put("updateYaml", sanatizedUpdateYaml); // TODO
 
-		this.auditRecordService.populateAndSaveAuditRecordUsingMapData(
-				AuditOperationType.STREAM, AuditActionType.UPDATE,
+		this.auditRecordService.populateAndSaveAuditRecordUsingMapData(AuditOperationType.STREAM, AuditActionType.UPDATE,
 				streamName, auditedData);
+	}
+
+
+	// --------------------------------------------------------------
+	// Scheduler
+	// --------------------------------------------------------------
+	@Around("execution(* org.springframework.cloud.scheduler.spi.core.Scheduler.schedule(..)) && args(scheduleRequest)")
+	public void schedule(ProceedingJoinPoint joinPoint, ScheduleRequest scheduleRequest) throws Throwable {
+
+		logger.info("AOP: Scheduler.schedule");
+
+		joinPoint.proceed(joinPoint.getArgs());
+
+		this.auditRecordService.populateAndSaveAuditRecordUsingMapData(AuditOperationType.SCHEDULE, AuditActionType.CREATE,
+				scheduleRequest.getScheduleName(), this.auditServiceUtils.convertScheduleRequestToAuditData(scheduleRequest));
+	}
+
+
+	// --------------------------------------------------------------
+	// Tasks
+	// --------------------------------------------------------------
+	@Around("execution(* org.springframework.cloud.dataflow.server.service.impl.DefaultTaskService.executeTask(..)) " +
+			"&& args(taskName, taskDeploymentProperties, commandLineArgs)")
+	public Object executeTask(ProceedingJoinPoint joinPoint,
+			String taskName, Map<String, String> taskDeploymentProperties, List<String> commandLineArgs) throws Throwable {
+
+		logger.info("AOP: Task.launch");
+
+		Object result = joinPoint.proceed(joinPoint.getArgs());
+
+		final Map<String, Object> auditedData = new HashMap<>(3);
+		auditedData.put(DefaultTaskService.TASK_DEFINITION_DSL_TEXT, ""); //TODO no DSL
+		auditedData.put(DefaultTaskService.TASK_DEPLOYMENT_PROPERTIES, taskDeploymentProperties);
+		auditedData.put(DefaultTaskService.COMMAND_LINE_ARGS, commandLineArgs);
+
+		// auditedData.put(TASK_DEFINITION_DSL_TEXT, this.argumentSanitizer.sanitizeTask(taskDefinition));
+		// auditedData.put(TASK_DEPLOYMENT_PROPERTIES, this.argumentSanitizer.sanitizeProperties(taskDeploymentProperties));
+		// auditedData.put(COMMAND_LINE_ARGS, commandLineArgs); //TODO see gh-2469
+
+		auditRecordService.populateAndSaveAuditRecordUsingMapData(AuditOperationType.TASK, AuditActionType.DEPLOY, taskName, auditedData);
+
+		return result;
+	}
+
+	@Around("execution(* org.springframework.cloud.dataflow.server.service.impl.DefaultTaskService.saveTaskDefinition(..)) " +
+			"&& args(name, dsl)")
+	public void saveTaskDefinition(ProceedingJoinPoint joinPoint, String name, String dsl) throws Throwable {
+
+		logger.info("AOP: saveTaskDefinition");
+
+		joinPoint.proceed(joinPoint.getArgs());
+
+		auditRecordService.populateAndSaveAuditRecord(AuditOperationType.TASK, AuditActionType.CREATE, name, dsl);
+		// name, this.argumentSanitizer.sanitizeTask(taskDefinition)); //FIXME depends on gh-2469
+	}
+
+	@Around("execution(* org.springframework.cloud.dataflow.server.service.impl.DefaultTaskService.deleteTaskDefinition(..)) " +
+			"&& args(name)")
+	public void deleteTaskDefinition(ProceedingJoinPoint joinPoint, String name) throws Throwable {
+
+		logger.info("AOP: deleteTaskDefinition");
+
+		joinPoint.proceed(joinPoint.getArgs());
+
+		auditRecordService.populateAndSaveAuditRecord(
+				AuditOperationType.TASK, AuditActionType.DELETE,
+				name, ""); // TODO taskDefinition.getDslText()
+		// name, this.argumentSanitizer.sanitizeTask(taskDefinition)); // FIXME depends on gh-2469
 	}
 
 	//@Before("execution(* org.springframework.cloud.dataflow.server.controller.AppRegistryController.registerAll(..))")

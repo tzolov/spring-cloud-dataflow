@@ -33,8 +33,6 @@ import org.springframework.cloud.dataflow.registry.AppRegistry;
 import org.springframework.cloud.dataflow.registry.AppRegistryCommon;
 import org.springframework.cloud.dataflow.registry.domain.AppRegistration;
 import org.springframework.cloud.dataflow.rest.util.DeploymentPropertiesUtils;
-import org.springframework.cloud.dataflow.server.audit.domain.AuditActionType;
-import org.springframework.cloud.dataflow.server.audit.domain.AuditOperationType;
 import org.springframework.cloud.dataflow.server.audit.service.AuditRecordService;
 import org.springframework.cloud.dataflow.server.config.apps.CommonApplicationProperties;
 import org.springframework.cloud.dataflow.server.controller.WhitelistProperties;
@@ -229,18 +227,18 @@ public class DefaultTaskService implements TaskService {
 		}
 		taskExecutionRepository.updateExternalExecutionId(taskExecution.getExecutionId(), id);
 
-		final Map<String, Object> auditedData = new HashMap<>(3);
-		auditedData.put(TASK_DEFINITION_DSL_TEXT, taskDefinition.getDslText());
-		auditedData.put(TASK_DEPLOYMENT_PROPERTIES, taskDeploymentProperties);
-		auditedData.put(COMMAND_LINE_ARGS, commandLineArgs);
+		//final Map<String, Object> auditedData = new HashMap<>(3);
+		//auditedData.put(TASK_DEFINITION_DSL_TEXT, taskDefinition.getDslText());
+		//auditedData.put(TASK_DEPLOYMENT_PROPERTIES, taskDeploymentProperties);
+		//auditedData.put(COMMAND_LINE_ARGS, commandLineArgs);
 
 		// auditedData.put(TASK_DEFINITION_DSL_TEXT, this.argumentSanitizer.sanitizeTask(taskDefinition));
 		// auditedData.put(TASK_DEPLOYMENT_PROPERTIES, this.argumentSanitizer.sanitizeProperties(taskDeploymentProperties));
 		// auditedData.put(COMMAND_LINE_ARGS, commandLineArgs); //TODO see gh-2469
 
-		auditRecordService.populateAndSaveAuditRecordUsingMapData(
-				AuditOperationType.TASK, AuditActionType.DEPLOY,
-				taskDefinition.getName(), auditedData);
+		//auditRecordService.populateAndSaveAuditRecordUsingMapData(
+		//		AuditOperationType.TASK, AuditActionType.DEPLOY,
+		//		taskDefinition.getName(), auditedData);
 
 		return taskExecution.getExecutionId();
 	}
@@ -305,10 +303,10 @@ public class DefaultTaskService implements TaskService {
 			saveStandardTaskDefinition(taskDefinition);
 		}
 
-		auditRecordService.populateAndSaveAuditRecord(
-				AuditOperationType.TASK, AuditActionType.CREATE,
-				name, dsl);
-		// name, this.argumentSanitizer.sanitizeTask(taskDefinition)); //FIXME depends on gh-2469
+		//auditRecordService.populateAndSaveAuditRecord(
+		//		AuditOperationType.TASK, AuditActionType.CREATE,
+		//		name, dsl);
+		//// name, this.argumentSanitizer.sanitizeTask(taskDefinition)); //FIXME depends on gh-2469
 
 	}
 
@@ -346,10 +344,10 @@ public class DefaultTaskService implements TaskService {
 		// destroy normal task or composed parent task
 		destroyPrimaryTask(name);
 
-		auditRecordService.populateAndSaveAuditRecord(
-				AuditOperationType.TASK, AuditActionType.DELETE,
-				name, taskDefinition.getDslText());
-		// name, this.argumentSanitizer.sanitizeTask(taskDefinition)); // FIXME depends on gh-2469
+		//auditRecordService.populateAndSaveAuditRecord(
+		//		AuditOperationType.TASK, AuditActionType.DELETE,
+		//		name, taskDefinition.getDslText());
+		//// name, this.argumentSanitizer.sanitizeTask(taskDefinition)); // FIXME depends on gh-2469
 	}
 
 	private void destroyPrimaryTask(String name) {

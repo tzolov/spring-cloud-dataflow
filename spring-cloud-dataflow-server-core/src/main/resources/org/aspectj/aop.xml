@@ -3,6 +3,7 @@
 	<weaver>
 		<include within="org.springframework.cloud.dataflow.server.controller.*" />
 		<include within="org.springframework.cloud.dataflow.server.service.impl.*" />
+		<include within="org.springframework.cloud.scheduler.spi.core.*" />
 		<include within="org.springframework.boot..*" />
 	</weaver>
 

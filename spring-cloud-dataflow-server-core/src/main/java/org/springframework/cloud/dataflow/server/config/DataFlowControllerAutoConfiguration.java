@@ -436,9 +436,7 @@ public class DataFlowControllerAutoConfiguration {
 
 	@Bean
 	public AuditAspect auditAspect(AuditRecordService auditRecordService) {
-		AuditAspect aspect = Aspects.aspectOf(AuditAspect.class);
-		return aspect;
-		//return new AuditAspect(auditRecordService);
+		return Aspects.aspectOf(AuditAspect.class);
 	}
 
 	@Configuration
