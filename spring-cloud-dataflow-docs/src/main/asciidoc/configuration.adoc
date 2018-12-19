@@ -1,0 +1,6 @@
+[[configuration]]
+= Configuration
+
+include::configuration-local.adoc[]
+include::configuration-cloudfoundry.adoc[]
+include::configuration-kubernetes.adoc[]

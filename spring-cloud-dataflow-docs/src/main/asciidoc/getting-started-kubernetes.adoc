@@ -1,5 +1,5 @@
 [[getting-started-kubernetes]]
-= Getting Started - Kubernetes
+== Getting Started - Kubernetes
 
 http://cloud.spring.io/spring-cloud-dataflow/[Spring Cloud Data Flow] is a toolkit for building data integration and real-time data-processing pipelines.
 
@@ -8,7 +8,7 @@ This makes Spring Cloud Data Flow suitable for a range of data-processing use ca
 
 This project provides support for using Spring Cloud Data Flow with Kubernetes as the runtime for these pipelines, with applications packaged as Docker images.
 
-== Installation
+=== Installation
 
 This section covers how to install the Spring Cloud Data Flow Server on a Kubernetes cluster.
 Spring Cloud Data Flow depends on a few services and their availability.
@@ -32,7 +32,7 @@ dataflow:>app register --type source --name time --uri docker://springcloudstrea
 However, any application registered with a Maven, HTTP, or File resource for the executable jar (by using a `--uri` property prefixed with `maven://`, `http://` or `file://`) is *_not supported_*.
 =====
 
-=== Kubernetes Compatibility
+==== Kubernetes Compatibility
 
 The Spring Cloud Data Flow implementation for Kubernetes uses the link:https://github.com/spring-cloud/spring-cloud-deployer-kubernetes[Spring Cloud Deployer Kubernetes] library for orchestration.
 Before you begin setting up a Kubernetes cluster, refer to the link:https://github.com/spring-cloud/spring-cloud-deployer-kubernetes#kubernetes-compatibility[compatibility matrix] to learn more about deployer and server compatibility against Kubernetes release versions.
@@ -50,7 +50,7 @@ The following outlines the compatibility between Spring Cloud Data Flow for Kube
 |--------------------------------------------------------------------------------|
 ----
 
-=== Create a Kubernetes Cluster
+==== Create a Kubernetes Cluster
 
 The Kubernetes https://kubernetes.io/docs/setup/pick-right-solution/[Picking the Right Solution] guide lets you choose among many options, so you can pick the one that you are most comfortable using.
 
@@ -67,7 +67,7 @@ The more you add, the more VM resources is required.
 The rest of this getting started guide assumes that you have a working Kubernetes cluster and a `kubectl` command line utility.
 See the docs for installation instructions: http://kubernetes.io/docs/user-guide/prereqs/[Installing and Setting up kubectl].
 
-=== Deploying with `kubectl`
+==== Deploying with `kubectl`
 
 To deploy with `kubectl`
 
@@ -86,7 +86,7 @@ $ git checkout {github-tag}
 ----
 ====
 
-==== Choosing a Message Broker
+===== Choosing a Message Broker
 
 For deployed applications to communicate with each other, you need to select a message broker.
 The sample deployment and service YAML files provide configurations for RabbitMQ and Kafka.
@@ -123,7 +123,7 @@ You can use `kubectl delete all -l app=kafka` to clean up afterwards.
 
 
 [[getting-started-kubernetes-deploy-services-and-data-flow]]
-==== Deploy Services, Skipper and Data Flow
+===== Deploy Services, Skipper and Data Flow
 
 You must deploy a number of services and the Data Flow server. To do so:
 
@@ -356,7 +356,7 @@ http://192.168.99.100:31991
 ----
 ====
 
-== Helm Installation
+=== Helm Installation
 
 Spring Cloud Data Flow offers a https://hub.kubeapps.com/charts/incubator/spring-cloud-data-flow[Helm Chart] for deploying the Spring Cloud Data Flow server and its required services to a Kubernetes Cluster.
 
@@ -561,7 +561,7 @@ helm install --name my-release \
 =====
 
 [[getting-started-kubernetes-deploying-streams]]
-== Deploying Streams
+=== Deploying Streams
 
 This section covers how to deploy streams with Spring Cloud Data Flow and Skipper.
 For more about Skipper, see https://cloud.spring.io/spring-cloud-skipper.
@@ -587,7 +587,7 @@ po/skipper-2408247821-50z31       1/1       Running   0          3m
 ====
 
 [[getting-started-kubernetes-create-stream]]
-=== Create Streams
+==== Create Streams
 
 This section describes how to create streams (using Skipper). To do so:
 
@@ -674,7 +674,7 @@ dataflow:>stream platform-list
 ╔════════╤══════════╤════════════════════════════════════════════════════════════════════════════════════════════════╗
 ║  Name  │   Type   │                                      Description                                               ║
 ╠════════╪══════════╪════════════════════════════════════════════════════════════════════════════════════════════════╣
-║minikube│kubernetes│master url = [https://kubernetes.default.svc/], namespace = [default], api version = [v1]       ║
+║minikube│kubernetes│master url == [https://kubernetes.default.svc/], namespace == [default], api version == [v1]       ║
 ╚════════╧══════════╧════════════════════════════════════════════════════════════════════════════════════════════════╝
 ----
 ====
@@ -1027,7 +1027,7 @@ dataflow:>stream history --name mystream
 ====
 
 [[getting-started-kubernetes-stream-rollback]]
-=== Rolling back to a Previous Version
+==== Rolling back to a Previous Version
 
 Skipper includes a `rollback` command so that you can roll back to a previous version.
 The following example (with output) shows how to use it:
@@ -1053,7 +1053,7 @@ dataflow:>stream history --name mystream
 ====
 
 [[getting-started-kubernetes-stream-destroy]]
-=== Destroy a Stream
+==== Destroy a Stream
 
 Destroy the stream, by using the following command:
 
@@ -1064,7 +1064,7 @@ dataflow:>stream destroy --name mystream
 ----
 ====
 
-=== Troubleshoot Stream Deployment
+==== Troubleshoot Stream Deployment
 
 To troubleshoot issues such as a container that has a fatal error starting up, add the `--previous` option to view the last terminated container log.
 You can also get more detailed information about the pods by using the `kubctl describe`, as the following example shows:
@@ -1081,7 +1081,7 @@ If you did not register the `--metadata-uri` for the Docker based starter applic
 In this case, you also do not see the configuration properties listed when using the `app info` command or in the Dashboard GUI.
 
 
-=== Accessing an Application from outside the Cluster
+==== Accessing an Application from outside the Cluster
 
 If you need to be able to connect from outside of the Kubernetes cluster to an application that you deploy (such as the `http-source`), you need to use either an external load balancer for the incoming connections or you need to use a NodePort configuration that exposes a proxy port on each Kubetnetes node.
 If your cluster does not support external load balancers (such as Minikube), you must use the NodePort approach.
@@ -1226,7 +1226,7 @@ dataflow:>stream destroy --name test
 ----
 ====
 
-== Deploying Tasks
+=== Deploying Tasks
 
 This section covers how to deploy tasks. To do so:
 
@@ -1271,7 +1271,7 @@ dataflow:>task destroy --name task1
 ----
 ====
 
-== Application and Server Properties
+=== Application and Server Properties
 
 This section covers how you can customize the deployment of your applications. You can use a number of properties to influence settings for the applications that are deployed. Properties can be applied on a per-application basis or in the server configuration for all deployed applications.
 
@@ -1279,7 +1279,7 @@ NOTE: Properties set on a per-application basis always take precedence over prop
 
 See https://github.com/spring-cloud/spring-cloud-deployer-kubernetes/blob/master/src/main/java/org/springframework/cloud/deployer/spi/kubernetes/KubernetesDeployerProperties.java[`KubernetesDeployerProperties`] for more on the supported options.
 
-=== Using Deployments
+==== Using Deployments
 
 The deployer uses `ReplicationController` by default. To use deployments instead, you can set the following option as part of the container `env` section in a deployment YAML file:
 
@@ -1294,7 +1294,7 @@ env:
 
 This is now the preferred setting and will be the default in future releases of the deployer.
 
-=== Memory and CPU Settings
+==== Memory and CPU Settings
 
 The apps are deployed by default with the following `Limits` and `Requests` settings:
 
@@ -1364,7 +1364,7 @@ env:
 
 The settings we have used so far only affect the settings for the container. They do not affect the memory setting for the JVM process in the container. If you would like to set JVM memory settings, you can provide an environment variable to do so. See the next section for details.
 
-=== Environment Variables
+==== Environment Variables
 
 To influence the environment settings for a given application, you can take advantage of the `spring.cloud.deployer.kubernetes.environmentVariables` deployer property.
 For example, a common requirement in production settings is to influence the JVM memory arguments.
@@ -1385,7 +1385,7 @@ anotherhost:9093'`
 
 This overrides the JVM memory setting for the desired `<app>` (replace `<app>` with the name of your application).
 
-=== Liveness and Readiness Probes
+==== Liveness and Readiness Probes
 
 The `liveness` and `readiness` probes use paths called `/health` and `/info` respectively. They use a `delay` of `10` for both and a `period` of `60` and `10` respectively. You can change these defaults when you deploy the stream by using deployer properties.
 
@@ -1522,7 +1522,7 @@ deployer.<app>.kubernetes.probeCredentialsSecret=myprobesecret
 +
 Replace `<app>` with the name of the application to which to apply authentication.
 
-=== Using `SPRING_APPLICATION_JSON`
+==== Using `SPRING_APPLICATION_JSON`
 
 You can use a `SPRING_APPLICATION_JSON` environment variable to set Data Flow server properties (including the configuration of maven repository settings) that are common across all of the Data Flow server implementations. These settings go at the server level in the container `env` section of a deployment YAML. The following example shows how to do so:
 
@@ -1535,7 +1535,7 @@ env:
 ----
 ====
 
-=== Private Docker Registry
+==== Private Docker Registry
 
 You can pull Docker images from a private registry on a per-application basis. First, you must create a secret in the cluster. Follow the https://kubernetes.io/docs/tasks/configure-pod-container/pull-image-private-registry/[Pull an Image from a Private Registry] guide to create the secret.
 
@@ -1563,7 +1563,7 @@ env:
 
 Replace `mysecret` with the name of the secret you created earlier.
 
-=== Annotations
+==== Annotations
 
 You can add annotations to Kubernetes objects on a per-application basis. The supported object types are pod `Deployment`, `Service` and `Job`. Annotations are defined in a `key:value` format allowing for multiple annotations separated by a comma. For more information and use cases on annotations see https://kubernetes.io/docs/concepts/overview/working-with-objects/annotations/[Annotations].
 
@@ -1580,7 +1580,7 @@ deployer.<app>.kubernetes.jobAnnotations=annotationName:annotationValue
 
 Replace `<app>` with the name of your application and the value of your annotations.
 
-=== Entry Point Style
+==== Entry Point Style
 
 An Entry Point Style affects how application properties are passed to the container to be deployed. Currently, three styles are supported:
 
@@ -1620,7 +1620,7 @@ Using the `boot` Entry Point Style corresponds to using the `exec` style `ENTRYP
 
 NOTE: When you use the `boot` Entry Point Style, the `deployer.<app>.kubernetes.environmentVariables` property must not contain `SPRING_APPLICATION_JSON`.
 
-=== Deployment Service Account
+==== Deployment Service Account
 
 You can configure a custom service account for application deployments through properties. You can use an existing service account or create a new one. One way to create a service account is by using `kubectl`, as the following example shows:
 
@@ -1656,7 +1656,7 @@ env:
 
 Replace `myserviceaccountname` with the service account name to be applied to all deployments.
 
-=== Image Pull Policy
+==== Image Pull Policy
 
 An image pull policy defines when a Docker image should be pulled to the local registry. Currently, three policies are supported:
 
@@ -1688,7 +1688,7 @@ You can configure an image pull policy at the server level in the container `env
 
 Replace `Always` with your desired image pull policy.
 
-=== Deployment Labels
+==== Deployment Labels
 
 Custom labels can be set on https://kubernetes.io/docs/concepts/workloads/controllers/deployment/[Deployment] related objects. See https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/[Labels] for more information on labels. Labels are specified in `key:value` format.
 
