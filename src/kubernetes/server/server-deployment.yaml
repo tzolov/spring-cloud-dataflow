@@ -16,24 +16,24 @@ spec:
     spec:
       containers:
       - name: scdf-server
-        image: springcloud/spring-cloud-dataflow-server:2.3.0.BUILD-SNAPSHOT
+        image: tzolov/spring-cloud-dataflow-server-arm:2.3.0.BUILD-SNAPSHOT
         imagePullPolicy: Always
         ports:
-        - containerPort: 80
+        - containerPort: 9393
         resources:
           limits:
-            cpu: 1.0
-            memory: 2048Mi
+            cpu: 0.5
+            memory: 640Mi
           requests:
             cpu: 0.5
-            memory: 1024Mi
+            memory: 640Mi
         env:
         - name: KUBERNETES_NAMESPACE
           valueFrom:
             fieldRef:
               fieldPath: "metadata.namespace"
         - name: SERVER_PORT
-          value: '80'
+          value: '9393'
         - name: SPRING_CLOUD_CONFIG_ENABLED
           value: 'false'
         - name: SPRING_CLOUD_DATAFLOW_FEATURES_ANALYTICS_ENABLED
@@ -56,6 +56,6 @@ spec:
           value: "{ \"maven\": { \"local-repository\": null, \"remote-repositories\": { \"repo1\": { \"url\": \"https://repo.spring.io/libs-snapshot\"} } } }"
       initContainers:
       - name: init-mysql-wait
-        image: busybox
+        image: arm32v7/busybox
         command: ['sh', '-c', 'until nc -w3 -z mysql 3306; do echo waiting for mysql; sleep 3; done;']
       serviceAccountName: scdf-sa

@@ -14,7 +14,7 @@ spec:
         app: grafana
     spec:
       containers:
-        - image: springcloud/spring-cloud-dataflow-grafana-prometheus:2.3.0.BUILD-SNAPSHOT
+        - image: tzolov/spring-cloud-dataflow-grafana-prometheus-arm:2.3.0.BUILD-SNAPSHOT
           name: grafana
           env:
             - name: GF_SECURITY_ADMIN_USER
@@ -31,8 +31,8 @@ spec:
             - containerPort: 3000
           resources:
             limits:
-              cpu: 500m
-              memory: 2500Mi
+              cpu: 150m
+              memory: 500Mi
             requests:
               cpu: 100m
               memory: 100Mi

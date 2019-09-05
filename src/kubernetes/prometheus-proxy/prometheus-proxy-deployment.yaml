@@ -17,7 +17,7 @@ spec:
       serviceAccountName: prometheus-proxy
       containers:
         - name: prometheus-proxy
-          image: micrometermetrics/prometheus-rsocket-proxy:latest
+          image: tzolov/prometheus-rsocket-proxy-arm:latest
           imagePullPolicy: Always
           ports:
             - name: scrape
@@ -26,11 +26,11 @@ spec:
               containerPort: 7001
           resources:
             limits:
-              cpu: 1.0
-              memory: 2048Mi
-            requests:
               cpu: 0.5
               memory: 1024Mi
+            requests:
+              cpu: 0.5
+              memory: 640Mi
       securityContext:
         fsGroup: 2000
         runAsNonRoot: true

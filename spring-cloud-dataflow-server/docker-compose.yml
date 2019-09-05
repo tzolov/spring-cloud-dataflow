@@ -50,6 +50,8 @@ services:
     depends_on:
       - kafka
     entrypoint: "./wait-for-it.sh mysql:3306 -- java -jar /maven/spring-cloud-dataflow-server.jar"
+    volumes:
+      - /tmp/apps:/root/apps
 
   app-import:
     image: springcloud/openjdk:2.0.0.RELEASE
@@ -78,4 +80,6 @@ services:
       - SPRING_DATASOURCE_USERNAME=root
       - SPRING_DATASOURCE_PASSWORD=rootpw
       - SPRING_DATASOURCE_DRIVER_CLASS_NAME=org.mariadb.jdbc.Driver
+    volumes:
+      - /tmp/apps:/root/apps
     entrypoint: "./wait-for-it.sh mysql:3306 -- java -Djava.security.egd=file:/dev/./urandom -jar /spring-cloud-skipper-server.jar"

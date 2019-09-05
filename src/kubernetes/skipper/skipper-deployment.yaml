@@ -16,13 +16,13 @@ spec:
     spec:
       containers:
       - name: skipper
-        image: springcloud/spring-cloud-skipper-server:2.2.0.BUILD-SNAPSHOT
+        image: tzolov/spring-cloud-skipper-server-arm:2.2.0.BUILD-SNAPSHOT
         imagePullPolicy: Always
         ports:
-        - containerPort: 80
+        - containerPort: 8089
         resources:
           limits:
-            cpu: 1.0
+            cpu: 0.5
             memory: 1024Mi
           requests:
             cpu: 0.5
@@ -36,10 +36,10 @@ spec:
           value: mysql
       initContainers:
       - name: init-mysql-wait
-        image: busybox
+        image: arm32v7/busybox
         command: ['sh', '-c', 'until nc -w3 -z mysql 3306; do echo waiting for mysql; sleep 3; done;']
       - name: init-mysql-database
-        image: mysql:5.6
+        image: hypriot/rpi-mysql:5.5
         env:
         - name: MYSQL_PWD
           valueFrom:

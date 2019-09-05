@@ -18,6 +18,13 @@ spec:
         image: wurstmeister/kafka:2.11-0.11.0.3
         ports:
         - containerPort: 9092
+        resources:
+          limits:
+            cpu: 0.5
+            memory: 512Mi
+          requests:
+            cpu: 0.5
+            memory: 512Mi
         env:
           - name: ENABLE_AUTO_EXTEND
             value: "true"

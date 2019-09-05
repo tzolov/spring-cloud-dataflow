@@ -12,7 +12,7 @@ spec:
         app: mysql
     spec:
       containers:
-      - image: mysql:5.7.25
+      - image: ibex/debian-mysql-server-5.7:latest
         name: mysql
         env:
           - name: MYSQL_ROOT_PASSWORD
@@ -23,11 +23,17 @@ spec:
         ports:
           - containerPort: 3306
             name: mysql
+        resources:
+          limits:
+            cpu: 150m
+          requests:
+            cpu: 100m
         volumeMounts:
           - name: data
             mountPath: /var/lib/mysql
         args:
           - "--ignore-db-dir=lost+found"
+          - "--skip-grant-tables"
       volumes:
       - name: data
         persistentVolumeClaim:
