@@ -17,6 +17,7 @@ spec:
       containers:
       - name: skipper
         image: tzolov/spring-cloud-skipper-server-arm:2.2.0.BUILD-SNAPSHOT
+#        image: tzolovarm/spring-cloud-skipper-server:2.2.0.BUILD-SNAPSHOT
         imagePullPolicy: Always
         ports:
         - containerPort: 8089
