@@ -213,7 +213,8 @@ public class Stream implements AutoCloseable {
 	* @return the log for said application within said stream
 	*/
 	public String logs(StreamApplication app) {
-        return this.client.streamOperations().streamExecutionLog(this.name, app.getName());
+		String appDeploymentId = this.appDeploymentId(app.getName());
+        return this.client.streamOperations().streamExecutionLog(this.name, appDeploymentId);
     }
 
 	public Map<StreamApplication, Map<String, String>> runtimeApps() {
@@ -233,6 +234,18 @@ public class Stream implements AutoCloseable {
 		}
 
 		return applications;
+	}
+
+	private String appDeploymentId(String appName) {
+
+		StreamStatusResource streamStatus = client.runtimeOperations()
+				.streamStatus(this.name).getContent().iterator().next();
+
+		return streamStatus.getApplications().getContent().stream()
+				.filter(asr -> asr.getName().startsWith(appName))
+				.map(AppStatusResource::getDeploymentId)
+				.findFirst()
+				.orElse("none");
 	}
 
 	@Override

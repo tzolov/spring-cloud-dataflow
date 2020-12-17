@@ -329,7 +329,7 @@ public class DataFlowIT {
 			httpPost(runtimeApps.getApplicationInstanceUrl(httpApp), message);
 
 			Awaitility.await().until(
-					() -> runtimeApps.getFirstInstanceLog(stream.getName(), "log").contains(message.toUpperCase()));
+					() -> stream.logs(new StreamApplication("log")).contains(message.toUpperCase()));
 		}
 	}
 
@@ -392,14 +392,14 @@ public class DataFlowIT {
 
 			Awaitility.await().until(() -> stream.getStatus().equals(DEPLOYED));
 
-			Awaitility.await().until(() -> runtimeApps.getFirstInstanceLog(stream.getName(), "log")
-					.contains("TICKTOCK - TIMESTAMP:"));
+			Awaitility.await().until(
+					() -> stream.logs(new StreamApplication("log")).contains("TICKTOCK - TIMESTAMP:"));
 
 			assertThat(stream.history().size()).isEqualTo(1L);
 			Awaitility.await().until(() -> stream.history().get(1).equals(DEPLOYED));
 
 			assertThat(stream.logs()).contains("TICKTOCK - TIMESTAMP:");
-			assertThat(stream.logs(new StreamApplication("lifecycle-test.log-v1"))).contains("TICKTOCK - TIMESTAMP:");
+			assertThat(stream.logs(new StreamApplication("log"))).contains("TICKTOCK - TIMESTAMP:");
 
 			// UPDATE
 			logger.info("stream-lifecycle-test: UPDATE");
@@ -411,8 +411,8 @@ public class DataFlowIT {
 
 			Awaitility.await().until(() -> stream.getStatus().equals(DEPLOYED));
 
-			Awaitility.await().until(() -> runtimeApps.getFirstInstanceLog(stream.getName(), "log")
-					.contains("Updated TICKTOCK - TIMESTAMP:"));
+			Awaitility.await().until(
+					() -> stream.logs(new StreamApplication("log")).contains("Updated TICKTOCK - TIMESTAMP:"));
 
 			assertThat(stream.history().size()).isEqualTo(2);
 			Awaitility.await().until(() -> stream.history().get(1).equals(DELETED));
@@ -425,8 +425,8 @@ public class DataFlowIT {
 			Awaitility.await().until(() -> stream.getStatus().equals(DEPLOYED));
 			assertThat(stream.getStatus()).isEqualTo(DEPLOYED);
 
-			Awaitility.await().until(() -> runtimeApps.getFirstInstanceLog(stream.getName(), "log")
-					.contains("TICKTOCK - TIMESTAMP:"));
+			Awaitility.await().until(
+					() -> stream.logs(new StreamApplication("log")).contains("TICKTOCK - TIMESTAMP:"));
 
 			assertThat(stream.history().size()).isEqualTo(3);
 			Awaitility.await().until(() -> stream.history().get(1).equals(DELETED));
@@ -508,8 +508,8 @@ public class DataFlowIT {
 			String httpAppUrl = runtimeApps.getApplicationInstanceUrl(httpStream.getName(), "http");
 			httpPost(httpAppUrl, message);
 
-			Awaitility.await().until(() -> runtimeApps.getFirstInstanceLog(logStream.getName(), "log")
-					.contains(message));
+			Awaitility.await().until(
+					() -> logStream.logs(new StreamApplication("log")).contains(message));
 		}
 	}
 
@@ -536,8 +536,8 @@ public class DataFlowIT {
 			String httpAppUrl = runtimeApps.getApplicationInstanceUrl(httpLogStream.getName(), "http");
 			httpPost(httpAppUrl, message);
 
-			Awaitility.await().until(() -> runtimeApps.getFirstInstanceLog(tapStream.getName(), "log")
-					.contains(message));
+			Awaitility.await().until(
+					() -> tapStream.logs(new StreamApplication("log")).contains(message));
 		}
 	}
 
@@ -570,16 +570,17 @@ public class DataFlowIT {
 			String httpAppUrl = runtimeApps.getApplicationInstanceUrl(httpStreamOne.getName(), "http");
 			httpPost(httpAppUrl, messageOne);
 
-			Awaitility.await().until(() -> runtimeApps.getFirstInstanceLog(logStream.getName(), "log")
-					.contains(messageOne));
+			Awaitility.await().until(
+					() -> logStream.logs(new StreamApplication("log")).contains(messageOne));
 
 			String messageTwo = "Unique Test message: " + new Random().nextInt();
 
 			String httpAppUrl2 = runtimeApps.getApplicationInstanceUrl(httpStreamTwo.getName(), "http");
 			httpPost(httpAppUrl2, messageTwo);
 
-			Awaitility.await().until(() -> runtimeApps.getFirstInstanceLog(logStream.getName(), "log")
-					.contains(messageTwo));
+			Awaitility.await().until(
+					() -> logStream.logs(new StreamApplication("log")).contains(messageTwo));
+
 		}
 	}
 
@@ -611,10 +612,10 @@ public class DataFlowIT {
 			httpPost(httpAppUrl, "abcd");
 			httpPost(httpAppUrl, "defg");
 
-			Awaitility.await().until(() -> runtimeApps.getFirstInstanceLog(fooLogStream.getName(), "log")
-					.contains("abcd-foo"));
-			Awaitility.await().until(() -> runtimeApps.getFirstInstanceLog(barLogStream.getName(), "log")
-					.contains("defg-bar"));
+			Awaitility.await().until(
+					() -> fooLogStream.logs(new StreamApplication("log")).contains("abcd-foo"));
+			Awaitility.await().until(
+					() -> barLogStream.logs(new StreamApplication("log")).contains("defg-bar"));
 		}
 	}
 
@@ -721,15 +722,12 @@ public class DataFlowIT {
 			Awaitility.await(stream.getName() + " failed to deploy!")
 					.until(() -> stream.getStatus().equals(DEPLOYED));
 
-			Awaitility.await().await("Source not started")
-					.until(() -> runtimeApps.getFirstInstanceLog(stream, "time")
-							.contains("Started TimeSource"));
-			Awaitility.await().await("Sink not started")
-					.until(() -> runtimeApps.getFirstInstanceLog(stream, "log")
-							.contains("Started LogSink"));
-			Awaitility.await().await("No output found")
-					.until(() -> runtimeApps.getFirstInstanceLog(stream, "log")
-							.contains("TICKTOCK CLOUD CONFIG - TIMESTAMP:"));
+			Awaitility.await("Source not started").until(
+					() -> stream.logs(new StreamApplication("time")).contains("Started TimeSource"));
+			Awaitility.await("Sink not started").until(
+					() -> stream.logs(new StreamApplication("log")).contains("Started LogSink"));
+			Awaitility.await("No output found").until(
+					() -> stream.logs(new StreamApplication("log")).contains("TICKTOCK CLOUD CONFIG - TIMESTAMP:"));
 		}
 	}
 
