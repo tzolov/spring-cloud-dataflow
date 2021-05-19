@@ -869,7 +869,7 @@ public class DataFlowIT {
 	public static final int EXIT_CODE_SUCCESS = 0;
 	public static final int EXIT_CODE_ERROR = 1;
 
-	private List<String> composedTaskLaunchArguments(String... additionalArguments) {
+	protected List<String> composedTaskLaunchArguments(String... additionalArguments) {
 		// the dataflow-server-use-user-access-token=true argument is required COMPOSED tasks in
 		// oauth2-protected SCDF installations and is ignored otherwise.
 		List<String> commonTaskArguments = new ArrayList<>();
@@ -1484,7 +1484,7 @@ public class DataFlowIT {
 				.map(suffix -> task.composedTaskChildTaskByLabel(suffix).get()).collect(Collectors.toList());
 	}
 
-	private static String randomTaskName() {
+	protected static String randomTaskName() {
 		return "task-" + randomSuffix();
 	}
 
