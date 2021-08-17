@@ -242,7 +242,7 @@ public class DataFlowIT {
 
 		// Maven app without metadata
 		dataFlowOperations.appRegistryOperations().register("maven-app-without-metadata", ApplicationType.sink,
-				"maven://org.springframework.cloud.stream.app:file-sink-kafka:2.1.1.RELEASE", null, true);
+				"maven://org.springframework.cloud.stream.app:file-sink-kafka:3.0.1", null, true);
 		DetailedAppRegistrationResource mavenAppWithoutMetadata = dataFlowOperations.appRegistryOperations()
 				.info("maven-app-without-metadata", ApplicationType.sink, false);
 		assertThat(mavenAppWithoutMetadata.getOptions()).hasSize(8);
@@ -759,11 +759,13 @@ public class DataFlowIT {
 	@Test
 	public void dataflowTaskLauncherSink() {
 		logger.info("dataflow-tasklauncher-sink-test");
-		String uri = String.format("docker:springcloud/spring-cloud-dataflow-tasklauncher-sink-kafka:%s",
-				testProperties.getDatabase().getDataflowVersion());
-		dataFlowOperations.appRegistryOperations()
-				.register("dataflowTaskLauncher", ApplicationType.sink, uri, null, true);
 
+		if (!runtimeApps.isAppRegistered("dataflow-tasklauncher", ApplicationType.sink)) {
+			logger.info("dataflow-tasklauncher-sink-test: SKIP - no dataflow-tasklauncher app registered!");
+		}
+
+		Assumptions.assumeTrue(runtimeApps.isAppRegistered("dataflow-tasklauncher", ApplicationType.sink),
+				"dataflow-tasklauncher-sink-test: SKIP - no dataflow-tasklauncher app registered!");
 
 		String taskName = randomTaskName();
 		try (Task task = Task.builder(dataFlowOperations)
@@ -772,7 +774,7 @@ public class DataFlowIT {
 				.description("Test timestamp task")
 				.build()) {
 			try (Stream stream = Stream.builder(dataFlowOperations).name("tasklauncher-test")
-					.definition("http | dataflowTaskLauncher --trigger.initialDelay=100 --trigger.maxPeriod=1000 " +
+					.definition("http | dataflow-tasklauncher --trigger.initialDelay=100 --trigger.maxPeriod=1000 " +
 							"--spring.cloud.dataflow.client.serverUri=http://dataflow-server:9393")
 					.create()
 					.deploy(testDeploymentProperties())) {
